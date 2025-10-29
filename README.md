@@ -19,7 +19,7 @@
 `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
 - Change directory to \src\backend\booking-app
 - `npm install` for installing useful modules and dependencies
-- `npm dev start` for running backend server
+- `npm run start:dev` for running backend server in developer mode (display changes)
 
 2. **Front-end**
 
