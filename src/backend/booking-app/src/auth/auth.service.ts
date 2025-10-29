@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 import { User, AuthProvider } from '../users/user.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -12,15 +13,31 @@ export class AuthService {
     constructor(
         @InjectRepository(User)
         private readonly usersRepository: Repository<User>,
-    ) {}
+        private readonly jwtService: JwtService,
+    ) { }
 
-    async register(registerDto: RegisterUserDto): Promise<User> {
+    private async generateTokens(user: User) {
+        const payload = {
+            sub: user.id,
+            email: user.email,
+        };
+
+        const accessToken = this.jwtService.sign(payload);
+        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+        return {
+            access_token: accessToken,
+            refresh_token: refreshToken,
+        };
+    }
+
+    async register(registerDto: RegisterUserDto) {
         const { email, fullName, password } = registerDto;
 
         // Kiểm tra email đã tồn tại chưa
         const existingUser = await this.usersRepository.findOne({ where: { email } });
         if (existingUser) {
-        throw new BadRequestException('Email exists');
+            throw new BadRequestException('Email exists');
         }
 
         // Hash mật khẩu
@@ -29,34 +46,53 @@ export class AuthService {
 
         // Tạo user mới
         const user = this.usersRepository.create({
-        email,
-        fullName,
-        passwordHash,
-        authProvider: AuthProvider.LOCAL,
-        isActive: true, // hoặc false nếu cần xác thực email
+            email,
+            fullName,
+            passwordHash,
+            authProvider: AuthProvider.LOCAL,
+            isActive: false,
         });
 
-        return this.usersRepository.save(user);
+        await this.usersRepository.save(user);
+
+        const tokens = await this.generateTokens(user);
+
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                isActive: user.isActive,
+            },
+            ...tokens, // access_token, refresh_token
+        };
     }
 
-    async login(loginDto: LoginUserDto): Promise<User> {
+    async login(loginDto: LoginUserDto) {
         const { email, password } = loginDto;
 
-        // Lấy user + passwordHash (phải select vì mặc định bị exclude)
         const user = await this.usersRepository
-        .createQueryBuilder('user')
-        .addSelect('user.passwordHash')
-        .where('user.email = :email', { email })
-        .getOne();
+            .createQueryBuilder('user')
+            .addSelect('user.passwordHash')
+            .where('user.email = :email', { email })
+            .getOne();
 
         if (!user) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
-        // Kiểm tra mật khẩu
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
-        // Có thể thêm JWT tại đây (ví dụ: return token)
-        return user;
+        const tokens = await this.generateTokens(user);
+
+        return {
+            user: {
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                isActive: user.isActive,
+            },
+            ...tokens,
+        };
     }
-} 
+}
 
