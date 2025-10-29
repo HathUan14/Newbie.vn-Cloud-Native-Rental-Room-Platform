@@ -5,11 +5,13 @@ export class RegisterUserDto {
     @IsNotEmpty()
     @IsString()
     @MinLength(2)
-    username: string;
+    fullName: string;
+    
     //Email: Không được để trống, phải đúng định dạng email 
     @IsNotEmpty()
     @IsEmail()
     email: string;
+
     //Mật khẩu: Không được để trống, kiểu chuỗi, độ dài tối thiểu 6 ký tự
     @IsNotEmpty()
     @IsString()
