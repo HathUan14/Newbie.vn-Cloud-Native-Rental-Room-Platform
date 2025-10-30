@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -10,89 +14,109 @@ import { LoginUserDto } from './dto/login-user.dto';
 
 @Injectable()
 export class AuthService {
-    constructor(
-        @InjectRepository(User)
-        private readonly usersRepository: Repository<User>,
-        private readonly jwtService: JwtService,
-    ) { }
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    private readonly jwtService: JwtService,
+  ) {}
 
-    private async generateTokens(user: User) {
-        const payload = {
-            sub: user.id,
-            email: user.email,
-        };
+  private async generateTokens(user: User) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+    };
 
-        const accessToken = this.jwtService.sign(payload);
-        const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
 
-        return {
-            access_token: accessToken,
-            refresh_token: refreshToken,
-        };
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
+  }
+
+  async register(registerDto: RegisterUserDto) {
+    const { email, fullName, password } = registerDto;
+
+    // Kiểm tra email đã tồn tại chưa
+    const existingUser = await this.usersRepository.findOne({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new BadRequestException('Email exists');
     }
 
-    async register(registerDto: RegisterUserDto) {
-        const { email, fullName, password } = registerDto;
+    // Hash mật khẩu
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
 
-        // Kiểm tra email đã tồn tại chưa
-        const existingUser = await this.usersRepository.findOne({ where: { email } });
-        if (existingUser) {
-            throw new BadRequestException('Email exists');
-        }
+    // Tạo user mới
+    const user = this.usersRepository.create({
+      email,
+      fullName,
+      passwordHash,
+      authProvider: AuthProvider.LOCAL,
+      isActive: false,
+    });
 
-        // Hash mật khẩu
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt);
+    await this.usersRepository.save(user);
 
-        // Tạo user mới
-        const user = this.usersRepository.create({
-            email,
-            fullName,
-            passwordHash,
-            authProvider: AuthProvider.LOCAL,
-            isActive: false,
-        });
+    const tokens = await this.generateTokens(user);
 
-        await this.usersRepository.save(user);
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        isActive: user.isActive,
+      },
+      ...tokens, // access_token, refresh_token
+    };
+  }
 
-        const tokens = await this.generateTokens(user);
+  async login(loginDto: LoginUserDto) {
+    const { email, password } = loginDto;
 
-        return {
-            user: {
-                id: user.id,
-                email: user.email,
-                fullName: user.fullName,
-                isActive: user.isActive,
-            },
-            ...tokens, // access_token, refresh_token
-        };
-    }
+    const user = await this.usersRepository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
 
-    async login(loginDto: LoginUserDto) {
-        const { email, password } = loginDto;
+    if (!user)
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
-        const user = await this.usersRepository
-            .createQueryBuilder('user')
-            .addSelect('user.passwordHash')
-            .where('user.email = :email', { email })
-            .getOne();
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch)
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
-        if (!user) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    const tokens = await this.generateTokens(user);
 
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        isActive: user.isActive,
+      },
+      ...tokens,
+    };
+  }
 
-        const tokens = await this.generateTokens(user);
+  async refresh(userId: number) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
 
-        return {
-            user: {
-                id: user.id,
-                email: user.email,
-                fullName: user.fullName,
-                isActive: user.isActive,
-            },
-            ...tokens,
-        };
-    }
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const newToken = await this.generateTokens(user);
+    return newToken;
+  }
+
+  async me(userId: number) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    return user;
+  }
 }
-
