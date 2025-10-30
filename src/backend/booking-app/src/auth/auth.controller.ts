@@ -122,9 +122,13 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards()
-  async logout() {
-    // Todo
-    return 'logout';
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async logout(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+    res.clearCookie('refresh_token');
+    res.clearCookie('access_token');
+    return {
+      message: 'Logout successfully',
+    };
   }
 }
