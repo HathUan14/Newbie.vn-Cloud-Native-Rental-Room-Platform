@@ -133,7 +133,7 @@ export default function RegisterPage() {
                                     Đăng ký tài khoản mới
                                 </h2>
                                 <p className="text-gray-600 text-sm">
-                                    Tạo tài khoản để bắt đầu đặt phòng
+                                    Tạo tài khoản để bắt đầu đặt phòng hoặc cho thuê phòng
                                 </p>
                             </div>
 
