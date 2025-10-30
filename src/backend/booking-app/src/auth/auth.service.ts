@@ -103,14 +103,20 @@ export class AuthService {
     };
   }
 
-  async refresh(payload: any) {
-    const user = await this.usersRepository.findOne({
-      where: { id: payload.sub },
-    });
+  async refresh(userId: number) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
 
     if (!user) throw new UnauthorizedException('User not found');
 
     const newToken = await this.generateTokens(user);
     return newToken;
+  }
+
+  async me(userId: number) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    return user;
   }
 }

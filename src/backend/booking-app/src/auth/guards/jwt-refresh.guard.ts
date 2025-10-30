@@ -26,7 +26,7 @@ export class JwtRefreshGuard implements CanActivate {
       const payload = this.jwtService.verify(refreshToken, {
         secret: this.configService.get('JWT_SECRET'),
       });
-      req.user = payload;
+      req['payload'] = payload;
       return true;
     } catch (error) {
       throw new UnauthorizedException(

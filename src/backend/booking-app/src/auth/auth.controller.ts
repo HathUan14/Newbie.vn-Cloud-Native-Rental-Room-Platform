@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Res,
   Req,
@@ -13,6 +14,7 @@ import { AuthService } from './auth.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -79,9 +81,9 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
     @Req() req: Request,
   ) {
-    const payload = req.user;
+    const userId = req['payload'].sub;
 
-    const token = await this.authService.refresh(payload);
+    const token = await this.authService.refresh(userId);
 
     res.cookie('access_token', token.access_token, {
       httpOnly: true,
@@ -103,10 +105,20 @@ export class AuthController {
     };
   }
 
-  @Post('me')
-  async me() {
-    // Todo
-    return 'me';
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async me(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+    const userId = req['payload'].sub;
+
+    console.log(userId);
+
+    const user = await this.authService.me(userId);
+
+    return {
+      message: 'Get user successfully',
+      user: user,
+    };
   }
 
   @Post('logout')
