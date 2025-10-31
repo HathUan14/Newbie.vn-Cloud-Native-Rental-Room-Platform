@@ -18,7 +18,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   async register(
@@ -42,8 +42,9 @@ export class AuthController {
     });
 
     return {
+      success: true,
       message: 'Register successfully',
-      user: result.user,
+      data: result.user,
     };
   }
 
@@ -70,8 +71,9 @@ export class AuthController {
     });
 
     return {
+      success: true,
       message: 'Login successfully',
-      user: result.user,
+      data: result.user,
     };
   }
 
@@ -100,8 +102,9 @@ export class AuthController {
     });
 
     return {
+      success: true,
       message: 'Refresh successfully',
-      token: token,
+      data: token,
     };
   }
 
@@ -116,8 +119,9 @@ export class AuthController {
     const user = await this.authService.me(userId);
 
     return {
+      success: true,
       message: 'Get user successfully',
-      user: user,
+      data: user,
     };
   }
 
@@ -128,7 +132,9 @@ export class AuthController {
     res.clearCookie('refresh_token');
     res.clearCookie('access_token');
     return {
+      success: true,
       message: 'Logout successfully',
+      data: null,
     };
   }
 }

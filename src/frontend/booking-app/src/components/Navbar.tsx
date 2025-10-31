@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Navbar() {
     const router = useRouter();
@@ -11,14 +12,24 @@ export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-    const isAuthenticated = false;
-    const user = null;
-
+    const { user, logout } = useAuth();
+    const isAuthenticated = !!user;
     const handleHostClick = () => {
         if (isAuthenticated) {
             router.push('/host/dashboard');
         } else {
             router.push('/login?redirect=/host/dashboard');
+        }
+    };
+
+     const handleLogout = async () => {
+        try {
+            await logout();
+            setIsUserMenuOpen(false); 
+            setIsMenuOpen(false); 
+            router.push('/'); 
+        } catch (error) {
+            console.error('Logout failed:', error);
         }
     };
 
@@ -69,7 +80,7 @@ export default function Navbar() {
                                     </svg>
                                     <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
                                         <span className="text-white text-sm font-medium">
-                                            {user?.fullName?.charAt(0).toUpperCase() || 'U'}
+                                            {user?.fullName?.charAt(0).toUpperCase()}
                                         </span>
                                     </div>
                                 </button>
@@ -78,10 +89,10 @@ export default function Navbar() {
                                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 border border-gray-200">
                                         <div className="px-4 py-3 border-b border-gray-100">
                                             <p className="text-sm font-semibold text-gray-900">
-                                                {user?.fullName || 'User'}
+                                                {user?.fullName}
                                             </p>
                                             <p className="text-xs text-gray-500">
-                                                {user?.email || 'user@example.com'}
+                                                {user?.email}
                                             </p>
                                         </div>
                                         <Link
@@ -131,7 +142,7 @@ export default function Navbar() {
                                         </Link>
                                         <hr className="my-2" />
                                         <button
-                                            onClick={() => {/* TODO: Logout */ }}
+                                            onClick={handleLogout}
                                             className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                                         >
                                             <div className="flex items-center gap-2">
@@ -199,7 +210,7 @@ export default function Navbar() {
             {isMenuOpen && (
                 <div className="md:hidden border-t border-gray-200 bg-white">
                     <div className="px-2 pt-2 pb-3 space-y-1">
-                    
+
                         <div className="border-t border-gray-200 my-2"></div>
 
                         <button
@@ -216,31 +227,31 @@ export default function Navbar() {
                                     href="/profile"
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                                 >
-                                     Tài khoản
+                                    Tài khoản
                                 </Link>
                                 <Link
                                     href="/bookings"
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                                 >
-                                     Đặt phòng của tôi
+                                    Đặt phòng của tôi
                                 </Link>
                                 <Link
                                     href="/favorites"
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                                 >
-                                     Yêu thích
+                                    Yêu thích
                                 </Link>
                                 <Link
                                     href="/host/dashboard"
                                     className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                                 >
-                                     Quản lý phòng
+                                    Quản lý phòng
                                 </Link>
                                 <button
-                                    onClick={() => {/* TODO: Logout */ }}
+                                    onClick={handleLogout}
                                     className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
                                 >
-                                     Đăng xuất
+                                    Đăng xuất
                                 </button>
                             </>
                         ) : (

@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -17,6 +19,13 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const { user } = useAuth();
+
+    React.useEffect(() => {
+        if (user) {
+            router.replace('/');
+        }
+    }, [user, router]);
 
     const validateForm = () => {
         const newErrors: { [key: string]: string } = {};
@@ -103,10 +112,10 @@ export default function RegisterPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl w-full">
-    
+
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                     <div className="grid md:grid-cols-2 gap-0">
-                        
+
                         <div className="bg-white p-12 flex flex-col items-center justify-center">
                             <div className="mb-8">
                                 <Image
@@ -126,7 +135,7 @@ export default function RegisterPage() {
                             </div>
                         </div>
 
-                      
+
                         <div className="p-8">
                             <div className="mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -137,7 +146,7 @@ export default function RegisterPage() {
                                 </p>
                             </div>
 
-                          
+
                             <button
                                 type="button"
                                 onClick={handleGoogleSignUp}
@@ -166,7 +175,7 @@ export default function RegisterPage() {
                                 </span>
                             </button>
 
-                           
+
                             <div className="relative mb-6">
                                 <div className="absolute inset-0 flex items-center">
                                     <div className="w-full border-t border-gray-300"></div>
@@ -227,11 +236,10 @@ export default function RegisterPage() {
                                             autoComplete="name"
                                             value={formData.fullName}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 border ${
-                                                errors.fullName
-                                                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                                            } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
+                                            className={`block w-full pl-10 pr-3 py-2.5 border ${errors.fullName
+                                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                                } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
                                             placeholder="Nguyễn Văn A"
                                         />
                                     </div>
@@ -276,11 +284,10 @@ export default function RegisterPage() {
                                             autoComplete="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 border ${
-                                                errors.email
-                                                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                                            } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
+                                            className={`block w-full pl-10 pr-3 py-2.5 border ${errors.email
+                                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                                } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
                                             placeholder="email@example.com"
                                         />
                                     </div>
@@ -325,11 +332,10 @@ export default function RegisterPage() {
                                             autoComplete="new-password"
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-10 py-2.5 border ${
-                                                errors.password
-                                                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                                            } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
+                                            className={`block w-full pl-10 pr-10 py-2.5 border ${errors.password
+                                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                                } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
                                             placeholder="••••••••"
                                         />
                                         <button
@@ -390,11 +396,10 @@ export default function RegisterPage() {
                                             autoComplete="new-password"
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-10 py-2.5 border ${
-                                                errors.confirmPassword
-                                                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                                                    : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
-                                            } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
+                                            className={`block w-full pl-10 pr-10 py-2.5 border ${errors.confirmPassword
+                                                ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                                                : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                                                } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
                                             placeholder="••••••••"
                                         />
                                         <button
@@ -423,7 +428,7 @@ export default function RegisterPage() {
                                         </p>
                                     )}
                                 </div>
-                                
+
                                 <div className="pt-4">
                                     <button
                                         type="submit"
