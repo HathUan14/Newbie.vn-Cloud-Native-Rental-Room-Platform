@@ -4,14 +4,16 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Room } from '../rooms/entities/room.entity';
 
 export enum AuthProvider {
   LOCAL = 'local',
   GOOGLE = 'google',
 }
 
-@Entity({ name: 'users' }) 
+@Entity({ name: 'users' })
 export class User {
   @PrimaryGeneratedColumn({ name: 'user_id' })
   id: number;
@@ -24,7 +26,7 @@ export class User {
     type: 'varchar',
     length: 255,
     nullable: true, // Cho phép null khi đăng nhập bằng Google
-    select: false, 
+    select: false,
   })
   passwordHash: string;
 
@@ -35,7 +37,7 @@ export class User {
     name: 'phone_number',
     type: 'varchar',
     length: 15,
-    nullable: true, 
+    nullable: true,
   })
   phoneNumber: string;
 
@@ -89,4 +91,6 @@ export class User {
   })
   updatedAt: Date;
 
+  @OneToMany(() => Room, (room) => room.host)
+  rooms: Room[];
 }

@@ -240,7 +240,6 @@ export default function RegisterPage() {
                                                 ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                                 } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
-                                            placeholder="Nguyễn Văn A"
                                         />
                                     </div>
                                     {errors.fullName && (
@@ -288,7 +287,6 @@ export default function RegisterPage() {
                                                 ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                                 } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
-                                            placeholder="email@example.com"
                                         />
                                     </div>
                                     {errors.email && (
@@ -336,7 +334,7 @@ export default function RegisterPage() {
                                                 ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                                 } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
-                                            placeholder="••••••••"
+                                            
                                         />
                                         <button
                                             type="button"
@@ -400,7 +398,7 @@ export default function RegisterPage() {
                                                 ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
                                                 : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                                                 } rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition duration-150 text-sm`}
-                                            placeholder="••••••••"
+                                            
                                         />
                                         <button
                                             type="button"

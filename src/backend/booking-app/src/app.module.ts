@@ -6,6 +6,9 @@ import { User } from './users/user.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
+import { RoomsModule } from './rooms/rooms.module';
+import { Room } from './rooms/entities/room.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -16,13 +19,14 @@ import { AuthModule } from './auth/auth.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        entities: [User],
+        autoLoadEntities: true, 
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
     UsersModule,
     AuthModule,
+    RoomsModule,
   ],
 })
 export class AppModule {}
