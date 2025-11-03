@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Room } from './entities/room.entity';
@@ -17,10 +17,16 @@ export class RoomsService {
   }
 
   async findOne(id: number) {
-    return await this.roomsRepository.findOne({
+    
+    const room =  await this.roomsRepository.findOne({
       where: { id },
-      relations: ['host'],
+      //Lấy tên của property trong room.entity khi truy vấn phòng
+      relations: ['host','roomType', 'images', 'roomAmenities'],
     });
+    if (!room) {
+      throw new NotFoundException(`Room with ID ${id} not found`);
+    }
+    return room;
   }
 
   async create(createRoomDto: any, hostId: number) {
