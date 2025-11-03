@@ -21,7 +21,7 @@ export class RoomsService {
     const room =  await this.roomsRepository.findOne({
       where: { id },
       //Lấy tên của property trong room.entity khi truy vấn phòng
-      relations: ['host','roomType', 'images', 'roomAmenities'],
+      relations: ['host','roomType', 'images', 'roomAmenities', 'roomAmenities.amenity'],
     });
     if (!room) {
       throw new NotFoundException(`Room with ID ${id} not found`);
