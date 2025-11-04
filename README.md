@@ -48,7 +48,7 @@
     "password": "123456"
 }
 ```
-- Room search api may like this: GET: http://localhost:3000/rooms?city=H%C3%A0%20N%E1%BB%99i&sort=pricePerMonth%3AASC&maxPrice=5000000&roomTypeId=13&amenities=41,40&keyword=Sinh%20vi%C3%AAn
+- Room search api may like this: GET: http://localhost:3000/rooms?city=Hà Nội&sort=pricePerMonth:ASC&maxPrice=5000000&roomTypeId=13&amenities=41,40&keyword=Sinh viên
 ```json
 {
 	"total": 1,
