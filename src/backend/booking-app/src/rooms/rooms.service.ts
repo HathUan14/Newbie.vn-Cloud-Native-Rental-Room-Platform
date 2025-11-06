@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder  } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Room } from './entities/room.entity';
 
 import { FilterRoomDto } from './dto/filter-room.dto';
@@ -10,7 +10,7 @@ export class RoomsService {
   constructor(
     @InjectRepository(Room)
     private readonly roomsRepository: Repository<Room>,
-  ) {}
+  ) { }
 
   // async findAll() {
   //   return await this.roomsRepository.find({
@@ -115,15 +115,21 @@ export class RoomsService {
 
 
   async findOne(id: number) {
-    
-    const room =  await this.roomsRepository.findOne({
+    const room = await this.roomsRepository.findOne({
       where: { id },
-      //Lấy tên của property trong room.entity khi truy vấn phòng
-      relations: ['host','roomType', 'images', 'roomAmenities', 'roomAmenities.amenity'],
+      relations: [
+        'host',
+        'roomType',
+        'images',
+        'roomAmenities',
+        'roomAmenities.amenity'
+      ],
     });
+
     if (!room) {
       throw new NotFoundException(`Room with ID ${id} not found`);
     }
+
     return room;
   }
 

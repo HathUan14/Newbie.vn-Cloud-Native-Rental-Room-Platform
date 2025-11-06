@@ -3,10 +3,12 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
+  Index, 
 } from 'typeorm';
-import { RoomAmenity } from '../../rooms/entities/room-amenity.entity';
+import { RoomAmenity } from './room-amenity.entity';
 
 @Entity({ name: 'amenities' })
+@Index('idx_amenities_name', ['name']) 
 export class Amenity {
   @PrimaryGeneratedColumn({ name: 'amenity_id' })
   id: number;
@@ -15,11 +17,11 @@ export class Amenity {
     name: 'amenity_name',
     type: 'varchar',
     length: 100,
-    unique: true,
+    unique: true, 
     nullable: false,
   })
+  @Index() 
   name: string;
-
 
   @OneToMany(() => RoomAmenity, (roomAmenity) => roomAmenity.amenity)
   roomAmenities: RoomAmenity[];

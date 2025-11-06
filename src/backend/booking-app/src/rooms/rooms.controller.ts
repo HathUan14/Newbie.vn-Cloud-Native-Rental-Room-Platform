@@ -22,13 +22,19 @@ export class RoomsController {
 
   @Get()
   async findAll(@Query() filter: FilterRoomDto) {
-    return this.roomsService.findAll(filter);
+    const rooms = await this.roomsService.findAll(filter);
+    return {
+      success: true,
+      data: rooms,
+    };
   }
   
-  //Dùng JwtAuthGuard để bảo vệ route, đòi hỏi người dùng phải xác thực trước khi truy cập
-  //@UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number){
-    return this.roomsService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const room = await this.roomsService.findOne(id);
+    return {
+      success: true,
+      data: room,
+    };
   }
 }

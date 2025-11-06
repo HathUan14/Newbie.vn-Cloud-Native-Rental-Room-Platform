@@ -7,7 +7,7 @@ import { Room } from './entities/room.entity';
 import { RoomType } from './entities/room-type.entity'; 
 import { RoomImage } from './entities/room-image.entity'; 
 import { RoomAmenity } from './entities/room-amenity.entity';
-import { Amenity } from './entities/amenity.entity'; // ✅ Import Amenity entity
+import { Amenity } from './entities/amenity.entity'; 
 
 @Module({
   imports: [
