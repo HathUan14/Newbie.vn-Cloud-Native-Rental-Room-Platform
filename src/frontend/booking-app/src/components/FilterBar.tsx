@@ -54,7 +54,7 @@ function FilterBar({ onFilter, className }: FilterBarProps) {
 
   return (
     <div
-      className={`relative w-fit max-w-5xl bg-white/80 backdrop-blur-md shadow-2xl 
+      className={`w-fit max-w-5xl bg-white/80 backdrop-blur-md shadow-2xl 
         rounded-3xl p-6 flex flex-wrap justify-between gap-4 border border-gray-200
         ${className}
         `}

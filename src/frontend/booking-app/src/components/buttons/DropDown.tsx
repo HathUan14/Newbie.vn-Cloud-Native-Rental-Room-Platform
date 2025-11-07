@@ -42,8 +42,8 @@ function ButtonDropDown({
   };
 
   return (
-    <div className="relative flex-1 min-w-[180px]" ref={dropDown}>
-      <span className="block text-gray-600 font-medium mb-1">{label}</span>
+    <div className="relative flex-1 w-fit h-fit min-w-[180px]" ref={dropDown}>
+      <p className="block text-gray-600 font-medium mb-1">{label}</p>
       <div
         className={`border rounded-xl px-4 py-2 bg-white cursor-pointer shadow-sm hover:shadow-md transition-all text-gray-800`}
         onClick={() => setOpenDropdown(!openDropdown)}

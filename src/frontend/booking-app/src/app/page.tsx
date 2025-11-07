@@ -30,12 +30,7 @@ export default function Home() {
     "Trên 10 triệu",
   ];
 
-  const areaRanges = [
-    "Dưới 20 m²",
-    "20 – 40 m²",
-    "40 – 60 m²",
-    "Trên 60 m²",
-  ];
+  const areaRanges = ["Dưới 20 m²", "20 – 40 m²", "40 – 60 m²", "Trên 60 m²"];
 
   const handleSelect = (field: string, value: string) => {
     setFilters({ ...filters, [field]: value });
@@ -58,7 +53,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex flex-col items-center px-6 py-16">
-
       {/* Thanh tìm kiếm */}
       <div className="w-full max-w-5xl bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl p-6 flex flex-wrap items-end justify-between gap-4 border border-gray-200">
         {/* Thành phố */}

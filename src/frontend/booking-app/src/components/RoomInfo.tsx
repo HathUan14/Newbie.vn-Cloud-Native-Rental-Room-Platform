@@ -14,11 +14,11 @@ export interface RoomProps {
 
 export default function RoomInfo({ room }: { room: RoomProps }) {
   return (
-    <div className="flex flex-row gap-2.5 bg-white rounded-lg shadow-sm p-6">
-      <div className="flex-1">
+    <div className="flex flex-col sm:flex-row gap-2.5 bg-white rounded-lg shadow-sm p-6 max-w-4xl">
+      <div className="">
         <img className="w-full aspect-video" src={room.imageUrl}></img>
       </div>
-      <div className="flex-2">
+      <div className="">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">{room.title}</h1>
 
         <div className="flex flex-wrap gap-6 text-gray-600 mb-6">
