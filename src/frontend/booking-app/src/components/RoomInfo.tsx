@@ -1,4 +1,4 @@
-import { Users, MapPin} from 'lucide-react';
+import { Users, MapPin } from "lucide-react";
 
 export default function RoomInfo({ room }: { room: any }) {
   return (
@@ -19,7 +19,6 @@ export default function RoomInfo({ room }: { room: any }) {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

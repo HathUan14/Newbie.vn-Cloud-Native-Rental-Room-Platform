@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
-import { useCloudinaryImages } from '@/hooks/useCloudinaryImages';
-import { ChevronLeft, ChevronRight, X, Maximize2 } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
+import { useCloudinaryImages } from "@/hooks/useCloudinaryImages";
+import { ChevronLeft, ChevronRight, X, Maximize2 } from "lucide-react";
 
 interface RoomImage {
   id: number;
@@ -40,11 +40,11 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
         const containerWidth = container.offsetWidth;
         const thumbLeft = selectedThumb.offsetLeft;
         const thumbWidth = selectedThumb.offsetWidth;
-        const scrollLeft = thumbLeft - (containerWidth / 2) + (thumbWidth / 2);
+        const scrollLeft = thumbLeft - containerWidth / 2 + thumbWidth / 2;
 
         container.scrollTo({
           left: scrollLeft,
-          behavior: 'smooth'
+          behavior: "smooth",
         });
       }
     }
@@ -53,13 +53,13 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isFullscreen) return;
-      if (e.key === 'ArrowLeft') handlePrev();
-      if (e.key === 'ArrowRight') handleNext();
-      if (e.key === 'Escape') setIsFullscreen(false);
+      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "ArrowRight") handleNext();
+      if (e.key === "Escape") setIsFullscreen(false);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isFullscreen]);
 
   if (isLoading) {
@@ -68,7 +68,10 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
         <div className="w-full h-[500px] bg-gradient-to-br from-gray-200 to-gray-300" />
         <div className="flex gap-3 p-4 overflow-hidden">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-24 w-32 flex-shrink-0 bg-gray-300 rounded-lg" />
+            <div
+              key={i}
+              className="h-24 w-32 flex-shrink-0 bg-gray-300 rounded-lg"
+            />
           ))}
         </div>
       </div>
@@ -81,7 +84,7 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
         {/* Main Image */}
         <div className="relative w-full h-[500px] group cursor-zoom-in bg-gradient-to-br from-gray-100 to-gray-200">
           <Image
-            src={imageUrls[selectedImage] || '/placeholder.jpg'}
+            src={imageUrls[selectedImage] || "/placeholder.jpg"}
             alt="Room main image"
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -132,22 +135,23 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
             ref={thumbnailsRef}
             className="flex gap-4 overflow-x-auto scroll-smooth pb-2"
             style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              WebkitOverflowScrolling: "touch",
             }}
           >
             {images.map((image, index) => (
               <div
                 key={image.id}
-                className={`mt-5 gap-10 relative h-28 w-40 flex-shrink-0 cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${index === selectedIndex
-                    ? 'ring-4 ring-blue-600 shadow-2xl scale-110'
-                    : 'ring-2 ring-gray-200 hover:ring-blue-400 hover:shadow-lg hover:scale-105'
-                  }`}
+                className={`mt-5 gap-10 relative h-28 w-40 flex-shrink-0 cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${
+                  index === selectedIndex
+                    ? "ring-4 ring-blue-600 shadow-2xl scale-110"
+                    : "ring-2 ring-gray-200 hover:ring-blue-400 hover:shadow-lg hover:scale-105"
+                }`}
                 onClick={() => setSelectedIndex(index)}
               >
                 <Image
-                  src={imageUrls[image.imageUrl] || '/placeholder.jpg'}
+                  src={imageUrls[image.imageUrl] || "/placeholder.jpg"}
                   alt={`Thumbnail ${image.id}`}
                   fill
                   className="object-cover"
@@ -174,7 +178,7 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
 
           <div className="relative w-full h-full max-w-7xl max-h-[90vh] mx-auto p-8">
             <Image
-              src={imageUrls[selectedImage] || '/placeholder.jpg'}
+              src={imageUrls[selectedImage] || "/placeholder.jpg"}
               alt="Fullscreen image"
               fill
               className="object-contain drop-shadow-2xl"
@@ -208,10 +212,11 @@ export default function ImageGallery({ images }: { images: RoomImage[] }) {
               <button
                 key={index}
                 onClick={() => setSelectedIndex(index)}
-                className={`h-2 rounded-full transition-all ${index === selectedIndex
-                    ? 'w-8 bg-white'
-                    : 'w-2 bg-white/40 hover:bg-white/60'
-                  }`}
+                className={`h-2 rounded-full transition-all ${
+                  index === selectedIndex
+                    ? "w-8 bg-white"
+                    : "w-2 bg-white/40 hover:bg-white/60"
+                }`}
               />
             ))}
           </div>
