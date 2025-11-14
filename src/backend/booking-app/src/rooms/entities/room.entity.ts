@@ -14,21 +14,12 @@ import { RoomType } from './room-type.entity';
 import { RoomImage } from './room-image.entity';
 import { RoomAmenity } from './room-amenity.entity';
 
-<<<<<<< HEAD
 export enum RoomStatus {
   AVAILABLE = 'available',
   RENTED = 'rented',
   PENDING = 'pending',
 }
 
-export enum ModerationStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-}
-
-=======
->>>>>>> 482693e50b3469b40c855c9d1373d91608d12d87
 export enum ParkingType {
   FREE = 'free',
   PAID = 'paid',
@@ -126,11 +117,7 @@ export class Room {
     name: 'moderation_status', // Cột riêng cho Admin
   })
   @Index() 
-<<<<<<< HEAD
   status: RoomStatus;
-=======
-  moderationStatus: ModerationStatus
->>>>>>> 482693e50b3469b40c855c9d1373d91608d12d87
 
   @Column({
   type: 'enum',
