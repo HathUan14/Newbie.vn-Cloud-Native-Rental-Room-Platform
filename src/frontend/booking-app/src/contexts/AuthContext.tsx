@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         if (!refreshResponse.ok) {
-          throw new Error('Refresh token expired');
+          console.log('Refresh token expired');
         }
 
         

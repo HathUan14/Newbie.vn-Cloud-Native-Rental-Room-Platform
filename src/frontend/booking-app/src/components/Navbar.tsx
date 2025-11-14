@@ -44,8 +44,8 @@ export default function Navbar() {
                 src="/logo.png"
                 alt="BookingApp Logo"
                 width={150}
-                height={100}
-                className="h-full w-auto object-contain"
+                height={60}
+                className="h-full w-auto"
                 priority
               />
             </Link>

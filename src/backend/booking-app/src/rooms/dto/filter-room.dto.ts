@@ -1,45 +1,88 @@
-import { IsOptional, IsNumberString, IsString } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, Max, IsEnum } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export enum SortField {
+  PRICE = 'pricePerMonth',
+  AREA = 'area_sqm',
+  CREATED = 'createdAt',
+}
+
+export enum SortOrder {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
 
 export class FilterRoomDto {
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   city?: string;
 
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   district?: string;
 
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   ward?: string;
 
-  @IsOptional() @IsNumberString()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
   minPrice?: number;
 
-  @IsOptional() @IsNumberString()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
   maxPrice?: number;
 
-  @IsOptional() @IsNumberString()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
   minArea?: number;
 
-  @IsOptional() @IsNumberString()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
   maxArea?: number;
 
-  @IsOptional() @IsNumberString()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   roomTypeId?: number;
 
-  @IsOptional() @IsNumberString()
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   hostId?: number;
 
-  @IsOptional() @IsString()
-  amenities?: string; // chuỗi các amenitiesId như "1,2,3"
+  @IsOptional()
+  @IsString()
+  amenities?: string; // "1,2,3,4"
 
-  @IsOptional() @IsString()
-  sort?: string; // ví dụ: "pricePerMonth:ASC"
+  @IsOptional()
+  @IsString()
+  sort?: string; // "pricePerMonth:ASC"
 
-  @IsOptional() @IsNumberString()
-  page?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number = 1;
 
-  @IsOptional() @IsNumberString()
-  limit?: number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number = 10;
 
-  @IsOptional() @IsString()
-  keyword?: string; // tìm nâng cao theo tiêu đề, mô tả
+  @IsOptional()
+  @IsString()
+  keyword?: string;
 }

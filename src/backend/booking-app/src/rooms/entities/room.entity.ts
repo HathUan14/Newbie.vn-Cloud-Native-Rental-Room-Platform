@@ -7,13 +7,14 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
-  Index, // ✅ Import Index
+  Index, 
 } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { RoomType } from './room-type.entity';
 import { RoomImage } from './room-image.entity';
 import { RoomAmenity } from './room-amenity.entity';
 
+<<<<<<< HEAD
 export enum RoomStatus {
   AVAILABLE = 'available',
   RENTED = 'rented',
@@ -26,6 +27,8 @@ export enum ModerationStatus {
   REJECTED = 'rejected',
 }
 
+=======
+>>>>>>> 482693e50b3469b40c855c9d1373d91608d12d87
 export enum ParkingType {
   FREE = 'free',
   PAID = 'paid',
@@ -37,25 +40,37 @@ export enum BathroomType {
   SHARED = 'shared',
 }
 
+export enum ModerationStatus {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  NEEDS_EDIT = 'needs_edit',
+}
+
+export enum AvailabilityStatus {
+  AVAILABLE = 'available',
+  RENTED = 'rented',
+}
+
 @Entity({ name: 'rooms' })
-@Index('idx_rooms_host_id', ['hostId']) // ✅ Index cho foreign key
-@Index('idx_rooms_room_type_id', ['roomTypeId']) // ✅ Index cho foreign key
-@Index('idx_rooms_status', ['status']) // ✅ Index cho filter status
-@Index('idx_rooms_city', ['city']) // ✅ Index cho search theo city
-@Index('idx_rooms_district', ['district']) // ✅ Index cho search theo district
-@Index('idx_rooms_city_district', ['city', 'district']) // ✅ Composite index
-@Index('idx_rooms_price', ['pricePerMonth']) // ✅ Index cho sort/filter price
-@Index('idx_rooms_created_at', ['createdAt']) // ✅ Index cho sort by date
+@Index('idx_rooms_host_id', ['hostId']) 
+@Index('idx_rooms_room_type_id', ['roomTypeId']) 
+@Index('idx_rooms_city', ['city']) 
+@Index('idx_rooms_district', ['district']) 
+@Index('idx_rooms_city_district', ['city', 'district']) 
+@Index('idx_rooms_price', ['pricePerMonth']) 
+@Index('idx_rooms_created_at', ['createdAt']) 
 export class Room {
   @PrimaryGeneratedColumn({ name: 'room_id' })
   id: number;
 
   @Column({ name: 'host_id' })
-  @Index() // ✅ Index riêng
+  @Index() 
   hostId: number;
 
   @Column({ name: 'room_type_id' })
-  @Index() // ✅ Index riêng
+  @Index() 
   roomTypeId: number;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
@@ -74,15 +89,15 @@ export class Room {
   ward: string;
 
   @Column({ type: 'varchar', length: 100 })
-  @Index() // ✅ Index cho search
+  @Index() 
   district: string;
 
   @Column({ type: 'varchar', length: 100 })
-  @Index() // ✅ Index cho search
+  @Index() 
   city: string;
 
   @Column({ name: 'price_per_month', type: 'decimal', precision: 12, scale: 2 })
-  @Index() // ✅ Index cho filter/sort price
+  @Index() 
   pricePerMonth: number;
 
   @Column({ name: 'deposit_amount', type: 'decimal', precision: 12, scale: 2 })
@@ -94,13 +109,28 @@ export class Room {
   @Column({ name: 'alley_description', type: 'varchar', length: 255, nullable: true })
   alleyDescription: string;
 
-  @Column({
+  // status
+@Column({
     type: 'enum',
-    enum: RoomStatus,
-    default: RoomStatus.AVAILABLE,
+    enum: AvailabilityStatus,
+    default: AvailabilityStatus.AVAILABLE,
+    name: 'availability_status', //  Cột cho Host/Hệ thống
   })
   @Index() 
+  availabilityStatus: AvailabilityStatus;
+
+  @Column({
+    type: 'enum',
+    enum: ModerationStatus,
+    default: ModerationStatus.DRAFT,
+    name: 'moderation_status', // Cột riêng cho Admin
+  })
+  @Index() 
+<<<<<<< HEAD
   status: RoomStatus;
+=======
+  moderationStatus: ModerationStatus
+>>>>>>> 482693e50b3469b40c855c9d1373d91608d12d87
 
   @Column({
   type: 'enum',
@@ -129,7 +159,7 @@ export class Room {
     type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  @Index() // ✅ Index cho sort by date
+  @Index() 
   createdAt: Date;
 
   @UpdateDateColumn({

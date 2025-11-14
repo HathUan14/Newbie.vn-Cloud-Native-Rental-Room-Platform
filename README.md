@@ -30,6 +30,13 @@
 
 2. **Front-end**
 
+### 3. Migration (change database tables structure)
+- Create dir src/migrations, create typeorm.config.ts in project backend dir
+- Add to script section of package.json `"typeorm": "typeorm-ts-node-commonjs -d typeorm.config.ts"`
+- `npm run build` -> create /dist
+- `npm run typeorm migration:generate src/migrations/add_moderation_status` -> create migration file in src/migrations
+- `npm run build`
+- `npm run typeorm migration:run` -> update table on Neon console
 
 ### 3. Operations
 1. **Back-end**
@@ -117,6 +124,49 @@
 	]
 }
 ```
+- Landlord viewing his own room post: GET localhost:3000/posts/my-listings
+- (for testing, remmember adding at Headers a new section: key: Authorization, value: Bear <access_token_you_can_get_by_POST:http://localhost:3000/auth/login>)
+```json
+{
+	"meta": {
+		"total": 7,
+		"page": 1,
+		"limit": 10,
+		"totalPages": 1
+	},
+	"data": [
+		{
+			"id": 36,
+			"title": "Nhà nguyên căn 3PN, 80m2, gần biển, Sơn Trà, Đà Nẵng",
+			"district": "Sơn Trà",
+			"city": "Đà Nẵng",
+			"pricePerMonth": "14000000.00",
+			"status": "available",
+			"moderationStatus": "pending",
+			"createdAt": "2025-11-01T11:19:02.976Z",
+			"roomType": {
+				"id": 16,
+				"name": "Nhà nguyên căn"
+			},
+			"images": [
+				{
+					"id": 213,
+					"roomId": 36,
+					"imageUrl": "phongtro_31_3.jpg",
+					"isThumbnail": false
+				},
+			],
+			"roomAmenities": [
+				{
+					"roomId": 36,
+					"amenityId": 44
+				},
+			]
+		},
+	]
+}
+```
+
 2. **Front-end**
 
 ---

@@ -145,7 +145,17 @@ export default async function RoomDetailPage({
             <ImageGallery images={room.images} />
 
             {/* Room Info */}
-            <RoomInfo room={room} />
+            <RoomInfo
+              room={{
+                title: room.title,
+                price: parseFloat(room.pricePerMonth),
+                guestCapacity: room.guestCapacity,
+                addressStreet: room.addressStreet,
+                ward: room.ward,
+                district: room.district,
+                city: room.city,
+              }}
+            />
 
             {/* Amenities */}
             <AmenityList amenities={room.roomAmenities} />
@@ -168,12 +178,12 @@ export default async function RoomDetailPage({
                     <span className="text-2xl font-bold text-blue-600">
                       {parseFloat(room.pricePerMonth) >= 1000000
                         ? `${(parseFloat(room.pricePerMonth) / 1000000).toFixed(
-                            1
-                          )} triệu`
+                          1
+                        )} triệu`
                         : new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(parseFloat(room.pricePerMonth))}
+                          style: "currency",
+                          currency: "VND",
+                        }).format(parseFloat(room.pricePerMonth))}
                     </span>
                     <span className="text-gray-500 text-base">/tháng</span>
                   </div>
@@ -189,12 +199,12 @@ export default async function RoomDetailPage({
                     <span className="font-semibold">
                       {parseFloat(room.depositAmount) >= 1000000
                         ? `${(parseFloat(room.depositAmount) / 1000000).toFixed(
-                            1
-                          )} triệu`
+                          1
+                        )} triệu`
                         : new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(parseFloat(room.depositAmount))}
+                          style: "currency",
+                          currency: "VND",
+                        }).format(parseFloat(room.depositAmount))}
                     </span>
                   </div>
                 </div>
