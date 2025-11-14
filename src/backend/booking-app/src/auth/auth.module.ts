@@ -7,6 +7,10 @@ import { AuthService } from './auth.service';
 import { User } from '../users/user.entity';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
+
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
@@ -22,7 +26,7 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtRefreshGuard],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, JwtRefreshGuard],
+  exports: [AuthService, JwtModule, JwtStrategy],
 })
 export class AuthModule {}

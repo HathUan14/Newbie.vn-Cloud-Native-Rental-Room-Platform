@@ -20,6 +20,12 @@ export enum RoomStatus {
   PENDING = 'pending',
 }
 
+export enum ModerationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+}
+
 export enum ParkingType {
   FREE = 'free',
   PAID = 'paid',
@@ -93,8 +99,16 @@ export class Room {
     enum: RoomStatus,
     default: RoomStatus.AVAILABLE,
   })
-  @Index() // ✅ Index cho filter status
+  @Index() 
   status: RoomStatus;
+
+  @Column({
+  type: 'enum',
+  enum: ModerationStatus,
+  default: ModerationStatus.PENDING
+  })
+  @Index() 
+  moderationStatus: ModerationStatus;
 
   @Column({ name: 'ai_location_rating', type: 'float', nullable: true })
   aiLocationRating: number;

@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 
 import { RoomsModule } from './rooms/rooms.module';
 import { Room } from './rooms/entities/room.entity';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { Room } from './rooms/entities/room.entity';
     UsersModule,
     AuthModule,
     RoomsModule,
+    PostsModule,
   ],
 })
 export class AppModule {}

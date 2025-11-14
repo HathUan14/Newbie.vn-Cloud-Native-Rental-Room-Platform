@@ -98,6 +98,7 @@ export class AuthService {
         email: user.email,
         fullName: user.fullName,
         isActive: user.isActive,
+        access_token: tokens.access_token
       },
       ...tokens,
     };
