@@ -44,6 +44,7 @@ export enum AvailabilityStatus {
   RENTED = 'rented',
 }
 
+
 @Entity({ name: 'rooms' })
 @Index('idx_rooms_host_id', ['hostId']) 
 @Index('idx_rooms_room_type_id', ['roomTypeId']) 

@@ -166,7 +166,42 @@
 	]
 }
 ```
-
+### 4. JWT Admin Session Check with Insomnia
+1. **Back-end**
+- To test tasks that need admin privillege, use the JWT Bearer Token in Insomnia.
+- Assume that there is an admin account created in the database.
+For example:
+```json
+{
+	"email": "nguyenvanphuoc1172@gmail.com",
+	"password": "123456"
+}
+```
+- Do these operations, respectively:
+	+ Login into server with admin account: POST http://localhost:3000/auth/login
+	+ If this form show up in the Preview tab, copy the Access Token
+	```json
+	{
+	"success": true,
+	"message": "Login successfully",
+	"data": {
+		"id": 9,
+		"email": "nguyenvanphuoc1172@gmail.com",
+		"fullName": "Nguyen Van Phuoc",
+		"isActive": false,
+		"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjksImVtYWlsIjoibmd1eWVudmFucGh1b2MxMTcyQGdtYWlsLmNvbSIsImlhdCI6MTc2MzE3NDcwOCwiZXhwIjoxNzYzMTc4MzA4fQ.VEf6XJUlMmmmuDqr7aYXggRiTRagQcQgbvMNZIxMngo",
+		"isHost": false,
+		"isAdmin": true
+		}
+	}
+```
+	+ At Auth tab, choose Bearer Token from the list and then, paste the token into Token emulation
+	+ Now you can test APIs with admin privilege:
+		GET /admin/posts/pending
+		PUT /admin/posts/approve/{id}
+		PUT /admin/posts/reject/{id}
+		PUT /admin/posts/request-edit/{id}
+		
 2. **Front-end**
 
 ---

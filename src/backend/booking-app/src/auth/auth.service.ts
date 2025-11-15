@@ -98,7 +98,10 @@ export class AuthService {
         email: user.email,
         fullName: user.fullName,
         isActive: user.isActive,
-        access_token: tokens.access_token
+        access_token: tokens.access_token,
+        //Thêm các trường thông tin role vào JWT payload
+        isHost: user.isHost, 
+        isAdmin: user.isAdmin,
       },
       ...tokens,
     };

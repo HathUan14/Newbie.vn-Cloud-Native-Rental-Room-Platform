@@ -9,7 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { Room } from './rooms/entities/room.entity';
 import { PostsModule } from './posts/posts.module';
-
+import { AdminModerationModule } from './admin-moderation/admin-mod.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +29,7 @@ import { PostsModule } from './posts/posts.module';
     AuthModule,
     RoomsModule,
     PostsModule,
+    AdminModerationModule
   ],
 })
 export class AppModule {}
