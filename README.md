@@ -40,14 +40,14 @@
 
 ### 3. Operations
 1. **Back-end**
-- Login (Also account test): POST: http://localhost:3000/auth/login 
+- Login (Also account test): POST: `http://localhost:3000/auth/login `
 ```json
 {
     "email": "test@example.com",
     "password": "123456"
 }
 ```
-- Register: POST: http://localhost:3000/auth/register 
+- Register: POST: `http://localhost:3000/auth/register `
 ```json
 {
     "email": "test@example.com",
@@ -55,7 +55,7 @@
     "password": "123456"
 }
 ```
-- Room search api may like this: GET: http://localhost:3000/rooms?city=Hà Nội&sort=pricePerMonth:ASC&maxPrice=5000000&roomTypeId=13&amenities=41,40&keyword=Sinh viên
+- Room search api may like this: `GET: http://localhost:3000/rooms?city=Hà Nội&sort=pricePerMonth:ASC&maxPrice=5000000&roomTypeId=13&amenities=41,40&keyword=Sinh viên`
 ```json
 {
 	"total": 1,
@@ -124,8 +124,8 @@
 	]
 }
 ```
-- Landlord viewing his own room post: GET localhost:3000/posts/my-listings
-- (for testing, remmember adding at Headers a new section: key: Authorization, value: Bear <access_token_you_can_get_by_POST:http://localhost:3000/auth/login>)
+- Landlord viewing his own room post: `GET localhost:3000/posts/my-listings`
+- (for testing, remmember adding at Headers a new section: key: Authorization, value: Bear <access_token_you_can_get_by_POST_your_account:http://localhost:3000/auth/login>)
 ```json
 {
 	"meta": {
@@ -166,7 +166,33 @@
 	]
 }
 ```
-### 4. JWT Admin Session Check with Insomnia
+- POST: `http://localhost:3000/posts`
+- (for testing, remmember adding at Headers a new section: key: Authorization, value: Bear <access_token_you_can_get_by_POST_your_account:http://localhost:3000/auth/login>)
+
+```json
+{
+  "title": "Test 1 - Phòng trọ mới xây, có ban công",
+  "description": "Phòng 25m2, đầy đủ nội thất",
+  "area_sqm": 25,
+  "addressStreet": "123 Nguyễn Văn Cừ",
+  "ward": "Phường 5",
+  "district": "Quận 5",
+  "city": "Hồ Chí Minh",
+  "pricePerMonth": 4500000,
+  "depositAmount": 4500000,
+  "guestCapacity": 2,
+  "alleyDescription": "Hẻm rộng 4m",
+  "roomTypeId": 13,
+  "moderationStatus": "pending",
+  "imageUrls": [
+    "https://example.com/img1.jpg",
+    "https://example.com/img2.jpg"
+  ]
+}
+```
+2. **Front-end**
+
+### 4. JWT Admin Session Check
 1. **Back-end**
 - To test tasks that need admin privillege, use the JWT Bearer Token in Insomnia.
 - Assume that there is an admin account created in the database.
@@ -194,7 +220,7 @@ For example:
 		"isAdmin": true
 		}
 	}
-```
+
 	+ At Auth tab, choose Bearer Token from the list and then, paste the token into Token emulation
 	+ Now you can test APIs with admin privilege:
 		GET /admin/posts/pending

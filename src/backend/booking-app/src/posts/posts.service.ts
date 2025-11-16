@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Room } from '../rooms/entities/room.entity';
+import { Room, RoomStatus } from '../rooms/entities/room.entity';
 import { PaginationDto } from './dto/pagination.dto';
+import { CreateRoomDto } from './dto/create-room.dto';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Room)
     private readonly roomRepository: Repository<Room>,
+
+    // @InjectRepository(RoomImage)
+    // private readonly imageRepo: Repository<RoomImage>,
   ) {}
 
   async getMyListings(hostId: number, pagination: PaginationDto) {
@@ -26,7 +30,7 @@ export class PostsService {
         id: true,
         title: true,
         status: true,
-        moderationStatus: true,   // ⭐ thêm ở đây
+        moderationStatus: true,  
         pricePerMonth: true,
         district: true,
         city: true,
@@ -43,5 +47,29 @@ export class PostsService {
       },
       data: rooms,
     };
+  }
+
+  async createRoom(hostId: number, dto: CreateRoomDto) {
+    const room = this.roomRepository.create({
+      ...dto,
+      hostId,
+      status: RoomStatus.AVAILABLE,
+    });
+
+    const savedRoom = await this.roomRepository.save(room);
+
+    // Để implement tính năng upload ảnh
+    //
+    // if (dto.imageUrls?.length) {
+    //   const images = dto.imageUrls.map((url) =>
+    //     this.imageRepo.create({
+    //       roomId: savedRoom.id,
+    //       imageUrl: url,
+    //     }),
+    //   );
+    //   await this.imageRepo.save(images);
+    // }
+
+    return savedRoom;
   }
 }

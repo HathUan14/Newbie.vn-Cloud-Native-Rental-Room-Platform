@@ -39,11 +39,6 @@ export enum ModerationStatus {
   NEEDS_EDIT = 'needs_edit',
 }
 
-export enum AvailabilityStatus {
-  AVAILABLE = 'available',
-  RENTED = 'rented',
-}
-
 
 @Entity({ name: 'rooms' })
 @Index('idx_rooms_host_id', ['hostId']) 
@@ -102,20 +97,11 @@ export class Room {
   alleyDescription: string;
 
   // status
-@Column({
-    type: 'enum',
-    enum: AvailabilityStatus,
-    default: AvailabilityStatus.AVAILABLE,
-    name: 'availability_status', //  Cột cho Host/Hệ thống
-  })
-  @Index() 
-  availabilityStatus: AvailabilityStatus;
 
   @Column({
     type: 'enum',
-    enum: ModerationStatus,
-    default: ModerationStatus.DRAFT,
-    name: 'moderation_status', // Cột riêng cho Admin
+    enum: RoomStatus,
+    default: RoomStatus.AVAILABLE,
   })
   @Index() 
   status: RoomStatus;
@@ -123,7 +109,7 @@ export class Room {
   @Column({
   type: 'enum',
   enum: ModerationStatus,
-  default: ModerationStatus.PENDING
+  default: ModerationStatus.DRAFT
   })
   @Index() 
   moderationStatus: ModerationStatus;
