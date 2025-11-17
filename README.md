@@ -30,15 +30,15 @@
 
 2. **Front-end**
 
-### 3. Migration (change database tables structure)
-- Create dir src/migrations, create typeorm.config.ts in project backend dir
-- Add to script section of package.json `"typeorm": "typeorm-ts-node-commonjs -d typeorm.config.ts"`
+### 3. Migration steps (to change the exist database tables structure)
+- Create dir src/migrations, create typeorm.config.ts file in project backend dir (already done)
+- Add to the script section of package.json file `"typeorm": "typeorm-ts-node-commonjs -d typeorm.config.ts"` (already done)
 - `npm run build` -> create /dist
-- `npm run typeorm migration:generate src/migrations/add_moderation_status` -> create migration file in src/migrations
+- `npm run typeorm migration:generate src/migrations/<your_migration_name>` -> create new migration file in src/migrations
 - `npm run build`
 - `npm run typeorm migration:run` -> update table on Neon console
 
-### 3. Operations
+### 4. Operations
 1. **Back-end**
 - Login (Also account test): POST: `http://localhost:3000/auth/login `
 ```json
@@ -166,7 +166,7 @@
 	]
 }
 ```
-- POST: `http://localhost:3000/posts`
+- POST: `http://localhost:3000/posts`: The landlord create a new post.
 - (for testing, remmember adding at Headers a new section: key: Authorization, value: Bear <access_token_you_can_get_by_POST_your_account:http://localhost:3000/auth/login>)
 
 ```json
@@ -192,7 +192,7 @@
 ```
 2. **Front-end**
 
-### 4. JWT Admin Session Check
+### 5. JWT Admin Session Check in Insomina
 1. **Back-end**
 - To test tasks that need admin privillege, use the JWT Bearer Token in Insomnia.
 - Assume that there is an admin account created in the database.
@@ -231,6 +231,6 @@ For example:
 2. **Front-end**
 
 ---
-### 4. Project features
+### 6. Project features
 ---
-### 5. References
+### 7. References

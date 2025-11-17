@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Put,
   Patch,
   Param,
   Delete,
@@ -42,5 +43,26 @@ export class PostsController {
     ) {
       const hostId = req.user.id; 
       return await this.postsService.createRoom(hostId, dto);
+    }
+    
+    @UseGuards(JwtAuthGuard)
+    @Put(':id')
+    async updatePost(
+      @Param('id') id: number,
+      @Body() updateData: any,
+      @Request() req,
+    ) {
+      const hostId = req.user.id; 
+      return this.postsService.updatePost(hostId, id, updateData);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Delete(':id')
+    async deletePost(
+      @Param('id') id: number,
+      @Request() req,
+    ) {
+      const hostId = req.user.id;
+      return this.postsService.deletePost(hostId, id);
     }
 }

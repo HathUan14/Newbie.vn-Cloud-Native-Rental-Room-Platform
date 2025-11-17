@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Room, RoomStatus } from '../rooms/entities/room.entity';
+import { Room, RoomStatus, ModerationStatus } from '../rooms/entities/room.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 
@@ -55,9 +55,7 @@ export class PostsService {
       hostId,
       status: RoomStatus.AVAILABLE,
     });
-
     const savedRoom = await this.roomRepository.save(room);
-
     // Để implement tính năng upload ảnh
     //
     // if (dto.imageUrls?.length) {
@@ -69,7 +67,38 @@ export class PostsService {
     //   );
     //   await this.imageRepo.save(images);
     // }
-
     return savedRoom;
   }
+
+  async updatePost( userId: number, id: number, updateData: any) {
+    const room = await this.roomRepository.findOne({ where: { id } });
+    if (!room) throw new NotFoundException('Post not found');
+    // Kiểm tra quyền sở hữu
+    if (room.hostId !== userId) {
+      throw new ForbiddenException('You are not the owner of this post');
+    }
+    // Resubmit
+    if (
+      room.moderationStatus === ModerationStatus.REJECTED ||
+      room.moderationStatus === ModerationStatus.NEEDS_EDIT ||
+      room.moderationStatus === ModerationStatus.APPROVED
+    ) {
+      updateData.moderationStatus = ModerationStatus.PENDING;
+    }
+    Object.assign(room, updateData);
+    return this.roomRepository.save(room);
+  }
+
+  async deletePost( userId: number, id: number) {
+    const room = await this.roomRepository.findOne({ where: { id } });
+    if (!room) throw new NotFoundException('Post not found');
+    // kiểm tra quyền sở hữu
+    if (room.hostId !== userId) {
+      throw new ForbiddenException('You are not allowed to delete this post');
+    }
+    const result = await this.roomRepository.delete({ id: id });
+    console.log(result);
+    return { success: true, message: 'Post deleted successfully' };
+  }
+
 }
