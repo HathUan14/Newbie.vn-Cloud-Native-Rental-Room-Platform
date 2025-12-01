@@ -6,10 +6,15 @@ import { User } from './users/user.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
-import { RoomsModule } from './rooms/rooms.module';
-import { Room } from './rooms/entities/room.entity';
+import { RoomsModule } from './room/rooms.module';
+import { Room } from './room/entities/room.entity';
 import { PostsModule } from './posts/posts.module';
-import { AdminModerationModule } from './admin-moderation/admin-mod.module';
+//import { AdminModerationModule } from './admin-moderation/admin-mod.module';
+
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { join } from 'path';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -20,16 +25,39 @@ import { AdminModerationModule } from './admin-moderation/admin-mod.module';
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
         url: configService.get('DATABASE_URL'),
-        autoLoadEntities: true, 
-        synchronize: false,
+        autoLoadEntities: true,
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),
+
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, 
+        auth: {
+          user: 'nakrothnguyen127@gmail.com', 
+          pass: 'ldcv jqxm iewu qddu',    
+        },
+      },
+      defaults: {
+        from: '"No Reply - PhongTro.vn" <nakrothnguyen127@gmail.com>',
+      },
+      template: {
+        dir: join(process.cwd(), 'src/mail/templates'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
+      },
+    }),
+
     UsersModule,
     AuthModule,
     RoomsModule,
     PostsModule,
-    AdminModerationModule
+    //AdminModerationModule
   ],
 })
-export class AppModule {}
+export class AppModule { }

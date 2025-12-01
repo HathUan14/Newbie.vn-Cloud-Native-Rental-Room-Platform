@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PostsService } from './posts.service'; 
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
 
 
 @Controller('posts')
@@ -35,6 +36,16 @@ export class PostsController {
       // return this.postsService.getMyListings(hostId, +page, +limit);
     }
 
+    @Get('/my-listings/:id')
+    @UseGuards(JwtAuthGuard)
+    async getMyListing(
+        @Request() req,
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+      const hostId = req.user.id;
+      return this.postsService.getMyListing(hostId, id);
+    }
+
     @Post()
     @UseGuards(JwtAuthGuard)
     async createPost(
@@ -48,8 +59,8 @@ export class PostsController {
     @UseGuards(JwtAuthGuard)
     @Put(':id')
     async updatePost(
-      @Param('id') id: number,
-      @Body() updateData: any,
+      @Param('id', ParseIntPipe) id: number,
+      @Body() updateData: UpdateRoomDto,
       @Request() req,
     ) {
       const hostId = req.user.id; 

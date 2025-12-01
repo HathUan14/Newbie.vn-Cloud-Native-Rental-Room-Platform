@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Room } from '../rooms/entities/room.entity';
+import { Room } from '../room/entities/room.entity';
 
 export enum AuthProvider {
   LOCAL = 'local',

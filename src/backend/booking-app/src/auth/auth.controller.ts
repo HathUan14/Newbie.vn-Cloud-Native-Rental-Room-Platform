@@ -114,10 +114,9 @@ export class AuthController {
   async me(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
     const userId = req['payload'].sub;
 
-    console.log(userId);
 
     const user = await this.authService.me(userId);
-
+    console.log(user);
     return {
       success: true,
       message: 'Get user successfully',
@@ -136,5 +135,18 @@ export class AuthController {
       message: 'Logout successfully',
       data: null,
     };
+  }
+
+  @Post('send-verification-email')
+  @UseGuards(JwtAuthGuard)
+  async sendVerification(@Req() req) {
+    const userId = req.user.id;
+    return this.authService.sendVerificationEmail(userId);
+  }
+
+
+  @Post('verify-email')
+  async verifyEmail(@Body('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 }

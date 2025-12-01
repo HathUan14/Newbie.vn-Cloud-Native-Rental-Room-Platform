@@ -2,7 +2,13 @@ export interface SearchFilters {
   priceRange: [number, number];
   sizeRange: [number, number];
   amenities: string[];
-  location: string;
+  location: {
+    city: string;
+    district: string;
+    ward: string;
+  };
+  roomType: string;
+  gender: string;
   sortBy: 'price-asc' | 'price-desc' | 'size-asc' | 'size-desc' | 'newest';
 }
 

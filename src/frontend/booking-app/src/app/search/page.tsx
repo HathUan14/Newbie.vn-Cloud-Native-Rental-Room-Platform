@@ -7,6 +7,8 @@ import PriceFilter from '@/components/Filters/PriceFilter';
 import AmenitiesFilter from '@/components/Filters/AmenitiesFilter';
 import SizeFilter from '@/components/Filters/SizeFilter';
 import LocationFilter from '@/components/Filters/LocationFilter';
+import RoomTypeFilter from '@/components/Filters/RoomTypeFilter';
+import GenderFilter from '@/components/Filters/GenderFilter';
 import SortDropdown from '@/components/Filters/SortDropdown';
 import { SearchFilters, Room } from '@/types/search';
 
@@ -15,9 +17,15 @@ export default function SearchPage() {
   
   const [filters, setFilters] = useState<SearchFilters>({
     priceRange: [0, 10000000],
-    sizeRange: [0, 100],
+    sizeRange: [0, 200],
     amenities: [],
-    location: searchParams.get('location') || '',
+    location: {
+      city: searchParams.get('city') || '',
+      district: searchParams.get('district') || '',
+      ward: searchParams.get('ward') || '',
+    },
+    roomType: '',
+    gender: 'ALL',
     sortBy: 'newest',
   });
 
@@ -38,8 +46,8 @@ export default function SearchPage() {
         'newest': 'createdAt:DESC',
         'price-asc': 'pricePerMonth:ASC',
         'price-desc': 'pricePerMonth:DESC',
-        'size-asc': 'area_sqm:ASC',
-        'size-desc': 'area_sqm:DESC',
+        'size-asc': 'area:ASC',
+        'size-desc': 'area:DESC',
       };
 
       const queryParams = new URLSearchParams({
@@ -52,8 +60,22 @@ export default function SearchPage() {
         maxArea: filters.sizeRange[1].toString(),
       });
 
-      if (filters.location) {
-        queryParams.append('city', filters.location);
+      if (filters.location.city) {
+        queryParams.append('city', filters.location.city);
+      }
+      if (filters.location.district) {
+        queryParams.append('district', filters.location.district);
+      }
+      if (filters.location.ward) {
+        queryParams.append('ward', filters.location.ward);
+      }
+
+      if (filters.roomType) {
+        queryParams.append('roomType', filters.roomType);
+      }
+
+      if (filters.gender && filters.gender !== 'ALL') {
+        queryParams.append('gender', filters.gender);
       }
 
       if (filters.amenities.length > 0) {
@@ -114,9 +136,11 @@ export default function SearchPage() {
   const clearAllFilters = () => {
     setFilters({
       priceRange: [0, 10000000],
-      sizeRange: [0, 100],
+      sizeRange: [0, 200],
       amenities: [],
-      location: '',
+      location: { city: '', district: '', ward: '' },
+      roomType: '',
+      gender: 'ALL',
       sortBy: 'newest',
     });
     setPage(1);
@@ -124,9 +148,11 @@ export default function SearchPage() {
 
   const activeFiltersCount = 
     (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000 ? 1 : 0) +
-    (filters.sizeRange[0] > 0 || filters.sizeRange[1] < 100 ? 1 : 0) +
+    (filters.sizeRange[0] > 0 || filters.sizeRange[1] < 200 ? 1 : 0) +
     (filters.amenities.length > 0 ? 1 : 0) +
-    (filters.location ? 1 : 0);
+    (filters.location.city || filters.location.district || filters.location.ward ? 1 : 0) +
+    (filters.roomType ? 1 : 0) +
+    (filters.gender !== 'ALL' ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,6 +161,16 @@ export default function SearchPage() {
         <div className="container mx-auto px-4 py-4">
           {/* Filters Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-4">
+            <RoomTypeFilter
+              value={filters.roomType as any}
+              onChange={(value) => setFilters({ ...filters, roomType: value })}
+            />
+            
+            <LocationFilter
+              value={filters.location}
+              onChange={(value) => setFilters({ ...filters, location: value })}
+            />
+            
             <PriceFilter
               value={filters.priceRange}
               onChange={(value) => setFilters({ ...filters, priceRange: value })}
@@ -145,14 +181,14 @@ export default function SearchPage() {
               onChange={(value) => setFilters({ ...filters, sizeRange: value })}
             />
             
+            <GenderFilter
+              value={filters.gender as any}
+              onChange={(value) => setFilters({ ...filters, gender: value })}
+            />
+            
             <AmenitiesFilter
               value={filters.amenities}
               onChange={(value) => setFilters({ ...filters, amenities: value })}
-            />
-            
-            <LocationFilter
-              value={filters.location}
-              onChange={(value) => setFilters({ ...filters, location: value })}
             />
 
             {activeFiltersCount > 0 && (
@@ -172,8 +208,10 @@ export default function SearchPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               Tìm thấy <span className="font-semibold text-gray-900">{total}</span> kết quả
-              {filters.location && (
-                <span> tại <span className="font-semibold text-gray-900">{filters.location}</span></span>
+              {filters.location.city && (
+                <span> tại <span className="font-semibold text-gray-900">
+                  {filters.location.ward || filters.location.district || filters.location.city}
+                </span></span>
               )}
             </div>
 

@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +12,8 @@ import { JwtService } from '@nestjs/jwt';
 import { User, AuthProvider } from '../users/user.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -18,12 +21,16 @@ export class AuthService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly jwtService: JwtService,
-  ) {}
+    private readonly usersService: UsersService,
+    private readonly mailService: MailService,
+  ) { }
 
   private async generateTokens(user: User) {
     const payload = {
       sub: user.id,
       email: user.email,
+      isHost: user.isHost,
+      isAdmin: user.isAdmin,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -33,6 +40,49 @@ export class AuthService {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
+  }
+
+  generateEmailToken(userId: string) {
+    return this.jwtService.sign(
+      { userId },
+      { expiresIn: '24h' },
+    );
+  }
+
+  async sendVerificationEmail(userId: number) {
+    const user = await this.usersService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User không tồn tại');
+    }
+
+    if (user.isActive) {
+      return { message: 'Email của bạn đã được xác thực rồi' };
+    }
+
+    // tạo token 24h
+    const token = this.jwtService.sign(
+      { userId: user.id },
+      { expiresIn: '24h' }
+    );
+
+    await this.mailService.sendUserConfirmation(user, token);
+
+    return { message: 'Email xác thực đã được gửi' };
+  }
+
+
+  async verifyEmail(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      await this.usersService.updateEmailVerified(decoded.userId);
+
+      return { message: "Xác thực email thành công!" };
+
+    } catch (e) {
+      throw new BadRequestException("Token không hợp lệ hoặc đã hết hạn!");
+    }
   }
 
   async register(registerDto: RegisterUserDto) {
@@ -100,7 +150,7 @@ export class AuthService {
         isActive: user.isActive,
         access_token: tokens.access_token,
         //Thêm các trường thông tin role vào JWT payload
-        isHost: user.isHost, 
+        isHost: user.isHost,
         isAdmin: user.isAdmin,
       },
       ...tokens,
@@ -120,7 +170,6 @@ export class AuthService {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
 
     if (!user) throw new UnauthorizedException('User not found');
-
     return user;
   }
 }

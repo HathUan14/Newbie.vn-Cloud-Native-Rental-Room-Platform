@@ -1,6 +1,6 @@
-// src/auth/jwt-auth.guard.ts
-import { AuthGuard } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+// // src/auth/jwt-auth.guard.ts
+// import { AuthGuard } from '@nestjs/passport';
+// import { Injectable } from '@nestjs/common';
 
-@Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {}
+// @Injectable()
+// export class JwtAuthGuard extends AuthGuard('jwt') {}

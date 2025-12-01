@@ -2,18 +2,34 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-interface User {
+export interface User {
   id: number;
-  fullName: string;
   email: string;
+  fullName: string;
   role?: string;
+  
+  // Bổ sung các trường từ Database
+  phoneNumber?: string | null;
+  avatarUrl?: string | null;
+  isHost: boolean;
+  isActive: boolean; 
+  authProvider?: string;
+  googleId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   setUser: (user: User | null) => void;
-  refreshAuth: () => Promise<void>;
+  
+  // Hàm này dùng để refresh token (hệ thống tự chạy)
+  refreshAuth: () => Promise<void>; 
+  
+  // Hàm này dùng cho UI gọi chủ động (VD: Sau khi update profile thì gọi để lấy data mới)
+  refreshUser: () => Promise<void>; 
+
   logout: () => Promise<void>;
 }
 
@@ -33,68 +49,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-  const refreshAuth = async () => {
+  const fetchMe = async (): Promise<boolean> => {
     try {
-      setIsLoading(true);
-      
-      // Try to get user info
-      let response = await fetch(`${API_URL}/auth/me`, {
+      const response = await fetch(`${API_URL}/auth/me`, {
         method: 'GET',
-        credentials: 'include',
+        credentials: 'include', 
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      // If unauthorized, try to refresh token
-      if (response.status === 401) {
-        console.log('Access token expired, refreshing...');
-        
-        const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!refreshResponse.ok) {
-          console.log('Refresh token expired');
-        }
-
-        
-        response = await fetch(`${API_URL}/auth/me`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-      }
-
-      if (!response.ok) {
-        console.log("error fetch");
-      }
+      if (!response.ok) return false;
 
       const data = await response.json();
-      
       if (data.success && data.data) {
-        setUser(data.data);
+        setUser(data.data); 
+        console.log(data.data);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const refreshAuth = async () => {
+    try {
+      setIsLoading(true);
+      
+      const success = await fetchMe();
+      if (success) return;
+
+      console.log('Access token expired or missing, trying to refresh...');
+      const refreshResponse = await fetch(`${API_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (refreshResponse.ok) {
+        await fetchMe();
       } else {
         setUser(null);
       }
     } catch (error) {
-      console.error('Auth error:', error);
-      
-     
-      if (error instanceof TypeError) {
-        console.warn('Network error');
-      } else {
-        setUser(null);
-      }
+      console.error('Auth check failed:', error);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const refreshUser = async () => {
+    await fetchMe();
   };
 
   const logout = async () => {
@@ -110,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      window.location.href = '/login'; 
     }
   };
 
@@ -118,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, setUser, refreshAuth, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, setUser, refreshAuth, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

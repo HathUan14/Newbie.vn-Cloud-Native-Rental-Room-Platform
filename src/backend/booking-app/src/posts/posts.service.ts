@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Room, RoomStatus, ModerationStatus } from '../rooms/entities/room.entity';
+import { Room, RoomStatus, ModerationStatus } from '../room/entities/room.entity';
+import { RoomImage } from '../room/entities/room-image.entity';
+import { RoomAmenity } from '../room/entities/room-amenity.entity';
 import { PaginationDto } from './dto/pagination.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 
@@ -11,8 +13,11 @@ export class PostsService {
     @InjectRepository(Room)
     private readonly roomRepository: Repository<Room>,
 
-    // @InjectRepository(RoomImage)
-    // private readonly imageRepo: Repository<RoomImage>,
+    @InjectRepository(RoomImage)
+    private readonly imageRepo: Repository<RoomImage>,
+
+    @InjectRepository(RoomAmenity)
+    private readonly roomAmenityRepo: Repository<RoomAmenity>,
   ) {}
 
   async getMyListings(hostId: number, pagination: PaginationDto) {
@@ -25,12 +30,13 @@ export class PostsService {
       order: { createdAt: 'DESC' },
       take: limit,
       skip,
-      relations: ['images', 'roomAmenities', 'roomType'],
+      relations: ['images', 'roomAmenities', 'roomAmenities.amenity'],
       select: {
         id: true,
         title: true,
         status: true,
         moderationStatus: true,  
+        moderationNotes: true,
         pricePerMonth: true,
         district: true,
         city: true,
@@ -49,24 +55,51 @@ export class PostsService {
     };
   }
 
+  async getMyListing(hostId: number, id: number) {
+    const room = await this.roomRepository.findOne({
+      where: { id, hostId },
+      relations: ['images', 'roomAmenities', 'roomAmenities.amenity'],
+    });
+
+    if (!room) {
+      throw new NotFoundException('Listing not found or you do not have access');
+    }
+
+    return room;
+  }
+
   async createRoom(hostId: number, dto: CreateRoomDto) {
     const room = this.roomRepository.create({
       ...dto,
       hostId,
       status: RoomStatus.AVAILABLE,
+      moderationStatus: dto.moderationStatus || ModerationStatus.PENDING,
     });
     const savedRoom = await this.roomRepository.save(room);
-    // Để implement tính năng upload ảnh
-    //
-    // if (dto.imageUrls?.length) {
-    //   const images = dto.imageUrls.map((url) =>
-    //     this.imageRepo.create({
-    //       roomId: savedRoom.id,
-    //       imageUrl: url,
-    //     }),
-    //   );
-    //   await this.imageRepo.save(images);
-    // }
+
+    // Upload images
+    if (dto.imageUrls?.length) {
+      const images = dto.imageUrls.map((url, index) =>
+        this.imageRepo.create({
+          roomId: savedRoom.id,
+          imageUrl: url,
+          isThumbnail: index === 0, // First image is thumbnail
+        }),
+      );
+      await this.imageRepo.save(images);
+    }
+
+    // Add amenities
+    if (dto.amenityIds?.length) {
+      const amenities = dto.amenityIds.map((amenityId) =>
+        this.roomAmenityRepo.create({
+          roomId: savedRoom.id,
+          amenityId,
+        }),
+      );
+      await this.roomAmenityRepo.save(amenities);
+    }
+
     return savedRoom;
   }
 
