@@ -137,8 +137,6 @@ export default function CreatePostPage() {
         payload.append('managementFee', data.managementFee.toString());
 
         if (data.miscNotes) payload.append('miscNotes', data.miscNotes);
-
-        // Amenities (Mảng) -> Append từng cái
         if (data.amenities && data.amenities.length > 0) {
             data.amenities.forEach((item) => payload.append('amenities', item));
         }
@@ -176,7 +174,6 @@ export default function CreatePostPage() {
             const payload = buildFormData(formData, false); // isDraft = false
 
             // 2. Gọi API
-            // Thay '/api/rooms' bằng URL thực tế của bạn hoặc dùng biến môi trường
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
             const res = await fetch(`${API_URL}/rooms`, {
                 method: 'POST',
@@ -193,14 +190,13 @@ export default function CreatePostPage() {
                 if (requireVerification) {
                     // Case: Đăng tin nhưng chưa active email -> Redirect kèm cờ báo
                     toast.success("Đã lưu tin! Vui lòng xác thực email.");
-                    router.push('/dashboard/my-posts?status=verification_needed');
+                    router.push('/dashboard/my-rooms?status=verification_needed');
                 } else {
                     // Case: Đăng tin thành công -> Chờ duyệt
                     toast.success("Đăng tin thành công! Đang chờ duyệt.");
-                    router.push('/dashboard/my-posts?status=success');
+                    router.push('/dashboard/my-rooms?status=success');
                 }
             } else {
-                // 4. Xử lý lỗi từ backend
                 toast.error(data.message || "Có lỗi xảy ra khi đăng tin");
                 console.error("Backend Error:", data);
             }
@@ -213,7 +209,6 @@ export default function CreatePostPage() {
     };
 
     const handleDraft = async () => {
-        // Lưu nháp thì không cần validate quá gắt gao, nhưng nên có title để dễ tìm
         if (!formData.title) {
             toast.error("Vui lòng nhập ít nhất tiêu đề để lưu nháp");
             return;
@@ -234,7 +229,6 @@ export default function CreatePostPage() {
 
             if (res.ok) {
                 toast.success("Đã lưu bản nháp thành công!");
-                // Redirect về trang quản lý tin nháp
                 router.push('/dashboard/my-posts?status=draft_saved');
             } else {
                 toast.error(data.message || "Không thể lưu bản nháp");

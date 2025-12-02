@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from '../auth/dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private cloudinaryService: CloudinaryService,
   ) { }
 
   async findById(id: number): Promise<User> {
@@ -25,16 +27,20 @@ export class UsersService {
     return this.usersRepository.save(newUser);
   }
 
-  async updateUser(userId: number, data: UpdateUserDto): Promise<User> {
+  async updateProfile(userId: number, updateUserDto: UpdateUserDto, file?: Express.Multer.File) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
-
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    Object.assign(user, data);
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadImage(file);
+      updateUserDto.avatarUrl = uploadResult.secure_url;
+    }
 
-    return this.usersRepository.save(user);
+    Object.assign(user, updateUserDto);
+
+    return await this.usersRepository.save(user);
   }
 
   async updateEmailVerified(id: string) {

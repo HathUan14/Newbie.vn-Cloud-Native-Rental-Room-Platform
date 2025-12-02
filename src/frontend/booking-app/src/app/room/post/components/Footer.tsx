@@ -38,9 +38,33 @@ const Footer: React.FC<FooterProps> = ({ currentStep, setCurrentStep, isSubmitti
                     <button
                         onClick={currentStep === STEPS.length ? handleSubmit : onNext}
                         disabled={isSubmitting}
-                        className="bg-blue-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3.5 rounded-xl font-semibold text-lg shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="bg-blue-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3.5 rounded-xl font-semibold text-lg shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 relative"
                     >
-                        {currentStep === STEPS.length ? (
+                        {isSubmitting ? (
+                            <div className="flex items-center gap-2">
+                                <svg
+                                    className="animate-spin h-5 w-5 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+                                    ></path>
+                                </svg>
+                                Đang đăng...
+                            </div>
+                        ) : currentStep === STEPS.length ? (
                             <>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -56,6 +80,7 @@ const Footer: React.FC<FooterProps> = ({ currentStep, setCurrentStep, isSubmitti
                             </>
                         )}
                     </button>
+
                 </div>
             </div>
         </div>

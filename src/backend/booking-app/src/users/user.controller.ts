@@ -3,11 +3,11 @@ import {
     Patch,
     Body,
     Req,
-    HttpCode,
-    HttpStatus,
+    UseInterceptors,
+    UploadedFile,
     UseGuards,
 } from '@nestjs/common';
-import type { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,22 +17,16 @@ export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
     @Patch('profile')
-    @HttpCode(HttpStatus.OK)
     @UseGuards(JwtAuthGuard)
+    @UseInterceptors(FileInterceptor('avatar'))
     async updateProfile(
-        @Req() req: Request,
+        @Req() req,
         @Body() updateUserDto: UpdateUserDto,
+        @UploadedFile() file: Express.Multer.File,
     ) {
-        // Lấy userId từ payload JWT
-        const userId = req['payload'].sub;
 
-        // Update user
-        const updatedUser = await this.usersService.updateUser(userId, updateUserDto);
+        const userId = req.user.id;
 
-        return {
-            success: true,
-            message: 'Profile updated successfully',
-            data: updatedUser,
-        };
+        return await this.usersService.updateProfile(userId, updateUserDto, file);
     }
 }

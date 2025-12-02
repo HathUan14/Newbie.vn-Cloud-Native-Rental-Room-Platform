@@ -78,28 +78,38 @@ export default function Navbar() {
                       d="M4 6h16M4 12h16M4 18h16"
                     />
                   </svg>
-                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">
-                      {user?.fullName?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {user?.avatarUrl ? (
+
+                    <img
+                      src={user.avatarUrl}
+                      alt={user.fullName}
+                      className="h-8 w-8 rounded-full object-cover border border-gray-200"
+                    />
+                  ) : (
+
+                    <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center border border-transparent">
+                      <span className="text-white text-sm font-medium">
+                        {user?.fullName?.charAt(0).toUpperCase() || "U"}
+                      </span>
+                    </div>
+                  )}
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 border border-gray-200">
+                  <div className="absolute right-0 mt-2 bg-white rounded-lg shadow-xl py-2 border border-gray-200">
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-l font-semibold text-gray-900">
                         {user?.fullName}
                       </p>
-                      <p className="text-xs text-gray-500">{user?.email}</p>
+                      <p className="text-l text-gray-500">{user?.email}</p>
                     </div>
                     <Link
                       href="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="h-4 w-4"
+                          className="h-5 w-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -111,16 +121,16 @@ export default function Navbar() {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                           />
                         </svg>
-                        Tài khoản
+                        Hồ sơ
                       </div>
                     </Link>
                     <Link
                       href="/bookings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="h-4 w-4"
+                          className="h-5 w-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -137,11 +147,11 @@ export default function Navbar() {
                     </Link>
                     <Link
                       href="/favorites"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="h-4 w-4"
+                          className="h-5 w-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -159,11 +169,11 @@ export default function Navbar() {
                     <hr className="my-2" />
                     <Link
                       href="/host/dashboard"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="h-4 w-4"
+                          className="h-5 w-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -181,11 +191,11 @@ export default function Navbar() {
                     <hr className="my-2" />
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-l text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="h-4 w-4"
+                          className="h-5 w-5"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
