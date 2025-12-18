@@ -30,4 +30,5 @@ export class CreateBookingDto {
     @IsString()
     // Should be empty when creating a booking
     cancelReason?: string;
+
 }

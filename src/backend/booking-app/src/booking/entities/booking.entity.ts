@@ -3,6 +3,8 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  OneToMany,
+  ManyToMany,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
@@ -59,9 +61,9 @@ export class Booking {
   updatedAt: Date;
 
   // Relations
-  @ManyToOne(() => User, { eager: false })
-  @JoinColumn({ name: 'renter_id' })
-  renter: User;
+  @OneToMany(() => User, (user) => user.id)
+  @JoinColumn({ name: 'renter_id'})
+  renter: User[];
 
   @ManyToOne(() => Room, { eager: false })
   @JoinColumn({ name: 'room_id' })
