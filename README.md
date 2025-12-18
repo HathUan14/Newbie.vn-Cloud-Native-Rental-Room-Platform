@@ -192,6 +192,13 @@
 ```
 2. **Front-end**
 
+- localhost:3001/admin/moderation       : Trang kiểm duyệt cho admin
+- localhost:3001/dashboard/my-rooms    : Trang quản lí phòng cho chủ nhà
+- localhost:3001/rooms/id              : Trang xem chi tiết phòng
+- localhost:3001/search                : Trang tìm kiếm phòng
+- localhost:3001/room/edit/id          : Trang chỉnh sửa phòng
+- localhost:3001/room/post             : Trang đăng tin phòng
+
 ### 5. JWT Admin Session Check in Insomina
 1. **Back-end**
 - To test tasks that need admin privillege, use the JWT Bearer Token in Insomnia.
@@ -228,8 +235,6 @@ For example:
 		PUT /admin/posts/reject/{id}
 		PUT /admin/posts/request-edit/{id}
 		
-2. **Front-end**
-
 ---
 ### 6. Project features
 ---
