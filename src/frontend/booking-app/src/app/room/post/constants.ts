@@ -1,4 +1,5 @@
 import { UtilityUnit } from './types';
+import { Home, Users, Bed, Building } from "lucide-react";
 
 export const STEPS = [
     { id: 1, title: 'Tổng quan', desc: 'Loại phòng & Mô tả' },
@@ -10,10 +11,10 @@ export const STEPS = [
 ];
 
 export const ROOM_TYPES_UI = [
-    { id: 'ROOM', label: 'Phòng đơn', icon: '🏠', desc: 'Phòng riêng 1-2 người' },
-    { id: 'STUDIO', label: 'Ở ghép', icon: '👥', desc: 'Chung cư mini / Studio' },
-    { id: 'DORM', label: 'Ký túc xá', icon: '🛌', desc: 'Giường tầng / Sleepbox' },
-    { id: 'HOUSE', label: 'Nguyên căn', icon: '🏢', desc: 'Nhà hoặc căn hộ riêng' },
+    { id: "ROOM", label: "Phòng đơn", icon: Home, desc: "Phòng riêng 1-2 người" },
+    { id: "STUDIO", label: "Ở ghép", icon: Users, desc: "Chung cư mini / Studio" },
+    { id: "DORM", label: "Ký túc xá", icon: Bed, desc: "Giường tầng / Sleepbox" },
+    { id: "HOUSE", label: "Nguyên căn", icon: Building, desc: "Nhà hoặc căn hộ riêng" },
 ];
 
 export const UTILITY_UNITS: { value: UtilityUnit; label: string }[] = [

@@ -1,34 +1,12 @@
-import { IsDateString, IsEmpty, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { BookingStatus} from '../entities/booking.entity';
+import { IsDateString, IsInt, IsNotEmpty } from 'class-validator';
 
 export class CreateBookingDto {
-    @IsDateString()
-    @IsNotEmpty()
-    moveInDate: string;
+  @IsInt()
+  roomId: number;
 
-    @IsInt()
-    @Min(0)
-    @Type(() => Number)
-    depositAmount: number;
+  @IsDateString()
+  date: string; // Theo sơ đồ lớp
 
-    @IsInt()
-    @Min(0)
-    @Type(() => Number)
-    totalPrice: number;
-
-    @IsOptional()
-    @IsEnum(BookingStatus)
-    status?: BookingStatus;
-
-    @IsOptional()
-    @IsString()
-    //Should be empty when creating a booking
-    rejectReason?: string;
-
-    @IsOptional()
-    @IsString()
-    // Should be empty when creating a booking
-    cancelReason?: string;
-
+  @IsDateString()
+  moveInDate: string; // Theo sơ đồ lớp
 }

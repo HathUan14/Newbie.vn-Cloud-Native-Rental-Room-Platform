@@ -130,7 +130,7 @@ export default function RegisterPage() {
                                     Chào mừng đến với BookingApp
                                 </h1>
                                 <p className="text-gray-600 text-lg">
-                                    Nền tảng đặt phòng an toàn và nhanh chóng
+                                    Nền tảng thuê phòng trọ an toàn và nhanh chóng
                                 </p>
                             </div>
                         </div>

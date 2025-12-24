@@ -15,6 +15,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { BookingModule } from './booking/booking.module';
+import { PaymentModule } from './payment/payment.module';
 import { Booking } from './booking/entities/booking.entity'
 
 @Module({
@@ -60,7 +61,7 @@ import { Booking } from './booking/entities/booking.entity'
     RoomsModule,
     PostsModule,
     BookingModule,
-    //AdminModerationModule
+    PaymentModule
   ],
 })
 export class AppModule { }

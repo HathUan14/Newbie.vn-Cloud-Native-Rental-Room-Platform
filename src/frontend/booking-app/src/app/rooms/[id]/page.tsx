@@ -8,9 +8,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { MapPin, Share2, Heart, Users,  Maximize2, Calendar, Shield, Phone, ExternalLink, AlertTriangle, CheckCircle2, Zap, Droplets, Wifi, Bike, Lock, FileText } from 'lucide-react';
+import { MapPin, Share2, Heart, Users, Maximize2, Calendar, Shield, Phone, ExternalLink, AlertTriangle, CheckCircle2, Zap, Droplets, Wifi, Bike, Lock, FileText } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import DescriptionViewer from '@/components/DescriptionViewer';
+import { useAuth } from '@/contexts/AuthContext';
 
 // --- CONSTANTS & UTILS ---
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -147,6 +148,7 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
   const images = data.images || [];
   const amenities = data.roomAmenities || [];
   const [isSaved, setIsSaved] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   return (
     <>
@@ -364,7 +366,7 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
               {/* Location Map */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-    
+
                   Vị trí chính xác
                 </h3>
                 <p className="text-gray-600 mb-4 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100">
@@ -427,7 +429,10 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
 
                 {/* 3. NÚT HÀNH ĐỘNG (Primary Action) */}
                 <div className="space-y-3 mb-6">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]">
+                  <button
+                    onClick={() => setShowBookingModal(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]"
+                  >
                     <CheckCircle2 className="w-5 h-5" />
                     THUÊ PHÒNG NGAY
                   </button>
@@ -452,9 +457,9 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
                     className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-100 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-sm transition-all"
                   >
                     <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" clip-rule="evenodd" d="M22.782 0.166016H27.199C33.2653 0.166016 36.8103 1.05701 39.9572 2.74421C43.1041 4.4314 45.5875 6.89585 47.2557 10.0428C48.9429 13.1897 49.8339 16.7347 49.8339 22.801V27.1991C49.8339 33.2654 48.9429 36.8104 47.2557 39.9573C45.5685 43.1042 43.1041 45.5877 39.9572 47.2559C36.8103 48.9431 33.2653 49.8341 27.199 49.8341H22.8009C16.7346 49.8341 13.1896 48.9431 10.0427 47.2559C6.89583 45.5687 4.41243 43.1042 2.7442 39.9573C1.057 36.8104 0.166016 33.2654 0.166016 27.1991V22.801C0.166016 16.7347 1.057 13.1897 2.7442 10.0428C4.43139 6.89585 6.89583 4.41245 10.0427 2.74421C13.1707 1.05701 16.7346 0.166016 22.782 0.166016Z" fill="#0068FF" />
-                      <path opacity="0.12" fill-rule="evenodd" clip-rule="evenodd" d="M49.8336 26.4736V27.1994C49.8336 33.2657 48.9427 36.8107 47.2555 39.9576C45.5683 43.1045 43.1038 45.5879 39.9569 47.2562C36.81 48.9434 33.265 49.8344 27.1987 49.8344H22.8007C17.8369 49.8344 14.5612 49.2378 11.8104 48.0966L7.27539 43.4267L49.8336 26.4736Z" fill="#001A33" />
-                      <path fill-rule="evenodd" clip-rule="evenodd" d="M7.779 43.5892C10.1019 43.846 13.0061 43.1836 15.0682 42.1825C24.0225 47.1318 38.0197 46.8954 46.4923 41.4732C46.8209 40.9803 47.1279 40.4677 47.4128 39.9363C49.1062 36.7779 50.0004 33.22 50.0004 27.1316V22.7175C50.0004 16.629 49.1062 13.0711 47.4128 9.91273C45.7385 6.75436 43.2461 4.28093 40.0877 2.58758C36.9293 0.894239 33.3714 0 27.283 0H22.8499C17.6644 0 14.2982 0.652754 11.4699 1.89893C11.3153 2.03737 11.1636 2.17818 11.0151 2.32135C2.71734 10.3203 2.08658 27.6593 9.12279 37.0782C9.13064 37.0921 9.13933 37.1061 9.14889 37.1203C10.2334 38.7185 9.18694 41.5154 7.55068 43.1516C7.28431 43.399 7.37944 43.5512 7.779 43.5892Z" fill="white" />
+                      <path fillRule="evenodd" clipRule="evenodd" d="M22.782 0.166016H27.199C33.2653 0.166016 36.8103 1.05701 39.9572 2.74421C43.1041 4.4314 45.5875 6.89585 47.2557 10.0428C48.9429 13.1897 49.8339 16.7347 49.8339 22.801V27.1991C49.8339 33.2654 48.9429 36.8104 47.2557 39.9573C45.5685 43.1042 43.1041 45.5877 39.9572 47.2559C36.8103 48.9431 33.2653 49.8341 27.199 49.8341H22.8009C16.7346 49.8341 13.1896 48.9431 10.0427 47.2559C6.89583 45.5687 4.41243 43.1042 2.7442 39.9573C1.057 36.8104 0.166016 33.2654 0.166016 27.1991V22.801C0.166016 16.7347 1.057 13.1897 2.7442 10.0428C4.43139 6.89585 6.89583 4.41245 10.0427 2.74421C13.1707 1.05701 16.7346 0.166016 22.782 0.166016Z" fill="#0068FF" />
+                      <path opacity="0.12" fillRule="evenodd" clipRule="evenodd" d="M49.8336 26.4736V27.1994C49.8336 33.2657 48.9427 36.8107 47.2555 39.9576C45.5683 43.1045 43.1038 45.5879 39.9569 47.2562C36.81 48.9434 33.265 49.8344 27.1987 49.8344H22.8007C17.8369 49.8344 14.5612 49.2378 11.8104 48.0966L7.27539 43.4267L49.8336 26.4736Z" fill="#001A33" />
+                      <path fillRule="evenodd" clipRule="evenodd" d="M7.779 43.5892C10.1019 43.846 13.0061 43.1836 15.0682 42.1825C24.0225 47.1318 38.0197 46.8954 46.4923 41.4732C46.8209 40.9803 47.1279 40.4677 47.4128 39.9363C49.1062 36.7779 50.0004 33.22 50.0004 27.1316V22.7175C50.0004 16.629 49.1062 13.0711 47.4128 9.91273C45.7385 6.75436 43.2461 4.28093 40.0877 2.58758C36.9293 0.894239 33.3714 0 27.283 0H22.8499C17.6644 0 14.2982 0.652754 11.4699 1.89893C11.3153 2.03737 11.1636 2.17818 11.0151 2.32135C2.71734 10.3203 2.08658 27.6593 9.12279 37.0782C9.13064 37.0921 9.13933 37.1061 9.14889 37.1203C10.2334 38.7185 9.18694 41.5154 7.55068 43.1516C7.28431 43.399 7.37944 43.5512 7.779 43.5892Z" fill="white" />
                       <path d="M20.5632 17H10.8382V19.0853H17.5869L10.9329 27.3317C10.7244 27.635 10.5728 27.9194 10.5728 28.5639V29.0947H19.748C20.203 29.0947 20.5822 28.7156 20.5822 28.2606V27.1421H13.4922L19.748 19.2938C19.8428 19.1801 20.0134 18.9716 20.0893 18.8768L20.1272 18.8199C20.4874 18.2891 20.5632 17.8341 20.5632 17.2844V17Z" fill="#0068FF" />
                       <path d="M32.9416 29.0947H34.3255V17H32.2402V28.3933C32.2402 28.7725 32.5435 29.0947 32.9416 29.0947Z" fill="#0068FF" />
                       <path d="M25.814 19.6924C23.1979 19.6924 21.0747 21.8156 21.0747 24.4317C21.0747 27.0478 23.1979 29.171 25.814 29.171C28.4301 29.171 30.5533 27.0478 30.5533 24.4317C30.5723 21.8156 28.4491 19.6924 25.814 19.6924ZM25.814 27.2184C24.2785 27.2184 23.0273 25.9672 23.0273 24.4317C23.0273 22.8962 24.2785 21.645 25.814 21.645C27.3495 21.645 28.6007 22.8962 28.6007 24.4317C28.6007 25.9672 27.3685 27.2184 25.814 27.2184Z" fill="#0068FF" />
@@ -495,6 +500,13 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
         </div>
       </div>
 
+      {/* BOOKING MODAL */}
+      {showBookingModal && (
+        <BookingModal 
+          room={data} 
+          onClose={() => setShowBookingModal(false)} 
+        />
+      )}
 
       {/* IMAGE LIGHTBOX MODAL */}
       {
@@ -563,6 +575,191 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
   );
 }
 
+// --- BOOKING MODAL COMPONENT ---
+function BookingModal({ room, onClose }: { room: any; onClose: () => void }) {
+  const { user } = useAuth();
+  const [moveInDate, setMoveInDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  const depositAmount = room.pricePerMonth * 0.1; // 10% deposit
+  const totalPrice = room.pricePerMonth;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!user) {
+      window.location.href = '/login';
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_URL}/booking`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomId: room.id,
+          moveInDate: moveInDate,
+          date: new Date().toISOString(),
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('✅ Thuê phòng thành công! Vui lòng chờ chủ nhà xác nhận.');
+        window.location.href = '/dashboard/bookings';
+      } else {
+        setError(result.msg || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      setError('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Thuê phòng</h2>
+            <p className="text-sm text-gray-500 mt-0.5">Hoàn tất thông tin để gửi yêu cầu</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {/* Room Info */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100">
+            <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{room.title}</h3>
+            <p className="text-sm text-gray-600 flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5" />
+              {room.district}, {room.city}
+            </p>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Move-in Date */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Ngày dự kiến dọn vào <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                required
+                min={new Date().toISOString().split('T')[0]}
+                value={moveInDate}
+                onChange={(e) => setMoveInDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-900"
+              />
+              <p className="text-xs text-gray-500 mt-1.5">
+                Chọn ngày bạn muốn bắt đầu thuê phòng
+              </p>
+            </div>
+
+            {/* Price Summary */}
+            <div className="bg-blue-50 rounded-xl p-4 space-y-3 border border-blue-100">
+              <h4 className="font-bold text-gray-900 text-sm">Chi tiết thanh toán</h4>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Giá thuê/tháng</span>
+                <span className="font-bold text-gray-900">{formatCurrency(totalPrice)}</span>
+              </div>
+
+              <div className="flex justify-between items-center pt-3 border-t border-blue-200">
+                <span className="text-sm text-gray-700 flex items-center gap-1.5">
+                  <Shield className="w-4 h-4 text-blue-600" />
+                  Tiền cọc 
+                </span>
+                <span className="font-bold text-blue-600 text-lg">{formatCurrency(room.deposit)}</span>
+              </div>
+
+              <p className="text-xs text-gray-600 pt-2">
+                💡 Thanh toán tiền cọc sau khi chủ nhà chấp nhận yêu cầu
+              </p>
+            </div>
+
+            {/* Terms */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+              <div className="flex gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-gray-700 leading-relaxed">
+                  <p className="font-semibold text-amber-900 mb-1">Lưu ý quan trọng:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Yêu cầu đặt phòng miễn phí, không thu phí</li>
+                    <li>Chủ nhà sẽ xem xét và phản hồi trong 24-48h</li>
+                    <li>Chỉ thanh toán cọc khi chủ nhà chấp nhận</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-2">
+                <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || !moveInDate}
+                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Đang gửi...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    Gửi yêu cầu
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- HELPER COMPONENTS ---
 function CostItem({
   label,
@@ -595,16 +792,3 @@ function CostItem({
   );
 }
 
-function InfoRow({ icon, label, value, highlight = false }: { icon: string, label: string, value: string, highlight?: boolean }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <span className="text-base">{icon}</span>
-        <span className="text-gray-600 font-medium">{label}</span>
-      </div>
-      <span className={`font-semibold ${highlight ? 'text-green-600' : 'text-gray-900'}`}>
-        {value}
-      </span>
-    </div>
-  );
-}

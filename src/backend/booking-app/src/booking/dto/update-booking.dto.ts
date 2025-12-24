@@ -8,7 +8,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BookingStatus } from '../entities/booking.entity';
+import { BookingStatus } from '../booking.constant';
 
 export class UpdateBookingDto {
   @IsOptional()

@@ -73,4 +73,25 @@ export class MailService {
       },
     });
   }
+
+  async sendBookingResult(
+    user: User,
+    roomTitle: string,
+    status: 'APPROVED' | 'REJECTED',
+    reason: string = ''
+  ) {
+    const isApproved = status === 'APPROVED';
+    
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: isApproved ? 'Yêu cầu đặt phòng đã được duyệt!' : 'Yêu cầu đặt phòng bị từ chối',
+      template: isApproved ? './booking-approved' : './booking-rejected',
+      context: {
+        name: user.fullName,
+        roomTitle: roomTitle,
+        reason: reason, 
+        actionUrl: 'http://localhost:3001/dashboard/my-bookings',
+      },
+    });
+  }
 }

@@ -3,23 +3,15 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  OneToMany,
-  ManyToMany,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/user.entity';
 import { Room } from '../../room/entities/room.entity';
+import { BookingStatus } from '../booking.constant';
 
-export enum BookingStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  CONFIRMED = 'CONFIRMED',
-  REJECTED = 'REJECTED',
-  CANCELLED_BY_RENTER = 'CANCELLED_BY_RENTER',
-  CANCELLED_BY_HOST = 'CANCELLED_BY_HOST',
-}
+export { BookingStatus };
 
 @Entity('bookings')
 export class Booking {
@@ -27,10 +19,10 @@ export class Booking {
   id: number;
 
   @Column({ name: 'renter_id' })
-  renterID: number;
+  renterId: number;
 
   @Column({ name: 'room_id' })
-  roomID: number;
+  roomId: number;
 
   @Column({ type: 'date', name: 'move_in_date' })
   moveInDate: Date;
@@ -61,11 +53,11 @@ export class Booking {
   updatedAt: Date;
 
   // Relations
-  @OneToMany(() => User, (user) => user.id)
-  @JoinColumn({ name: 'renter_id'})
-  renter: User[];
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'renter_id' })
+  renter: User;
 
-  @ManyToOne(() => Room, { eager: false })
+  @ManyToOne(() => Room)
   @JoinColumn({ name: 'room_id' })
   room: Room;
 }
