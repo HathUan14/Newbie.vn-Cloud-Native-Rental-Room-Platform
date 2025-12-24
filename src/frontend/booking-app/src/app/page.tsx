@@ -1,16 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import { useRouter } from "next/navigation";
+import SearchResultCard from "@/components/SearchResultCard";
+import { Room } from "@/types/search";
 
 export default function Home() {
+  const router = useRouter(); // để chuyển qua /search
+
   const [filters, setFilters] = useState({
-    city: "",
+    city: "TP. Hồ Chí Minh",
     priceRange: "",
     type: "",
     areaRange: "",
   });
 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // State và Effect hiện các phòng mặc định
+  const [rooms, setRooms] = useState<Room[]>([]); 
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetchDefaultRooms();
+  }, []);
+  const fetchDefaultRooms = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        city: "TP. Hồ Chí Minh",
+        page: "1",
+        limit: "8",
+        sort: "createdAt:DESC",
+      });
+
+      const res = await fetch(
+        `http://localhost:3000/rooms?${params.toString()}`
+      );
+      const result = await res.json();
+
+      if (result.success) {
+        setRooms(
+          (result.data.data || []).map((r: any) => ({
+            id: r.id,
+            title: r.title,
+            price: r.price,
+            size: r.size,
+            address: r.address,
+            images: r.images || [],
+            amenities: r.amenities || [],
+            roomType: r.roomType,
+            available: r.available,
+            rating: r.rating || 0,
+            reviewCount: 0,
+            location: r.location,
+            status: r.status,
+            description: r.description,
+          }))
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      setRooms([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const cities = [
     "Hà Nội",
@@ -40,6 +95,18 @@ export default function Home() {
   const handleSearch = () => {
     console.log("Tìm kiếm với:", filters);
     // TODO: Gọi API tìm kiếm
+    const params = new URLSearchParams();
+
+    if (filters.city) params.append("city", filters.city);
+    if (filters.type) params.append("roomType", filters.type);
+
+    // ví dụ mapping giá & diện tích (bạn có thể refine thêm)
+    if (filters.priceRange === "Dưới 3 triệu") {
+      params.append("minPrice", "0");
+      params.append("maxPrice", "3000000");
+    }
+
+    router.push(`/search?${params.toString()}`);
   };
 
   const dropdownClass =
@@ -175,6 +242,30 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+
+
+      {/* ADDED: DANH SÁCH PHÒNG PREVIEW */}
+      <div className="max-w-6xl mx-auto mt-12">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+          Phòng trọ nổi bật tại TP. Hồ Chí Minh
+        </h2>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-64 bg-gray-300 animate-pulse rounded-xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {rooms.map((room) => (
+              <SearchResultCard key={room.id} room={room} />
+            ))}
+          </div>
+        )}
+      </div>
+      {/* END ADDED */}
     </main>
   );
 }
