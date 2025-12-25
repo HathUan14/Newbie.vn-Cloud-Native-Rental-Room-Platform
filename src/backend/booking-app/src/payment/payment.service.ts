@@ -23,7 +23,15 @@ export class PaymentService {
   /**
    * Xử lý hoàn tiền
    */
-  async processRefund(transactionId: string, amount: number, transDate: string): Promise<boolean> {
-    return await this.vnpayService.processRefund(transactionId, amount, transDate);
+  async processRefund(
+    transactionId: string,
+    amount: number,
+    transDate: string,
+  ): Promise<boolean> {
+    return await this.vnpayService.processRefund(
+      transactionId,
+      amount,
+      transDate,
+    );
   }
 }

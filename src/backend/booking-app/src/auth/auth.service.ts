@@ -23,7 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
 
   private async generateTokens(user: User) {
     const payload = {
@@ -43,10 +43,7 @@ export class AuthService {
   }
 
   generateEmailToken(userId: string) {
-    return this.jwtService.sign(
-      { userId },
-      { expiresIn: '24h' },
-    );
+    return this.jwtService.sign({ userId }, { expiresIn: '24h' });
   }
 
   async sendVerificationEmail(userId: number) {
@@ -63,7 +60,7 @@ export class AuthService {
     // tạo token 24h
     const token = this.jwtService.sign(
       { userId: user.id },
-      { expiresIn: '24h' }
+      { expiresIn: '24h' },
     );
 
     await this.mailService.sendUserConfirmation(user, token);
@@ -71,17 +68,15 @@ export class AuthService {
     return { message: 'Email xác thực đã được gửi' };
   }
 
-
   async verifyEmail(token: string) {
     try {
       const decoded = this.jwtService.verify(token);
 
       await this.usersService.updateEmailVerified(decoded.userId);
 
-      return { message: "Xác thực email thành công!" };
-
+      return { message: 'Xác thực email thành công!' };
     } catch (e) {
-      throw new BadRequestException("Token không hợp lệ hoặc đã hết hạn!");
+      throw new BadRequestException('Token không hợp lệ hoặc đã hết hạn!');
     }
   }
 
