@@ -233,7 +233,7 @@ export class VnpayService implements IPaymentGateway {
 
       const json = await res.json();
 
-      if (json.vnp_ResponseCode == '00') {
+      if (json.vnp_ResponseCode == '00' && this.verifySignature(json)) {
         console.log(json);
         return true;
       }

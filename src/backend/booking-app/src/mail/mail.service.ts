@@ -12,7 +12,7 @@ export enum ModerationStatus {
 
 @Injectable()
 export class MailService {
-  constructor(private mailerService: MailerService) { }
+  constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(user: User, token: string) {
     const url = `http://localhost:3000/verify-email?token=${token}`;
@@ -33,7 +33,7 @@ export class MailService {
     roomTitle: string,
     status: ModerationStatus,
     reason: string = '',
-    roomId: number
+    roomId: number,
   ) {
     let template = '';
     let subject = '';
@@ -78,19 +78,51 @@ export class MailService {
     user: User,
     roomTitle: string,
     status: 'APPROVED' | 'REJECTED',
-    reason: string = ''
+    reason: string = '',
   ) {
     const isApproved = status === 'APPROVED';
-    
+
     await this.mailerService.sendMail({
       to: user.email,
-      subject: isApproved ? 'Yêu cầu đặt phòng đã được duyệt!' : 'Yêu cầu đặt phòng bị từ chối',
+      subject: isApproved
+        ? 'Yêu cầu đặt phòng đã được duyệt!'
+        : 'Yêu cầu đặt phòng bị từ chối',
       template: isApproved ? './booking-approved' : './booking-rejected',
       context: {
         name: user.fullName,
         roomTitle: roomTitle,
-        reason: reason, 
+        reason: reason,
         actionUrl: 'http://localhost:3001/dashboard/my-bookings',
+      },
+    });
+  }
+
+  async sendRefundResult(
+    user: User,
+    transactionId: string,
+    status: 'APPROVED' | 'REJECTED' | 'PENDING',
+    amount: number,
+    reason: string = '',
+  ) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject:
+        status === 'APPROVED'
+          ? 'Yêu cầu hoàn tiền đã được duyệt!'
+          : status === 'REJECTED'
+            ? 'Yêu cầu hoàn bị từ chối'
+            : 'Yêu cầu hoàn tiền đang được xem xét',
+      template:
+        status === 'APPROVED'
+          ? './refund-approved'
+          : status === 'REJECTED'
+            ? './refund-rejected'
+            : './refund-pending',
+      context: {
+        name: user.fullName,
+        transactionId: transactionId,
+        amount: amount,
+        reason: reason,
       },
     });
   }
