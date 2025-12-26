@@ -17,6 +17,7 @@ import { join } from 'path';
 import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payment/payment.module';
 import { Booking } from './booking/entities/booking.entity'
+import { DisputeModule } from './dispute/dispute.module';
 
 @Module({
   imports: [
@@ -61,7 +62,8 @@ import { Booking } from './booking/entities/booking.entity'
     RoomsModule,
     PostsModule,
     BookingModule,
-    PaymentModule
+    PaymentModule,
+    DisputeModule
   ],
 })
 export class AppModule { }
