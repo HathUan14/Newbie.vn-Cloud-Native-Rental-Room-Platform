@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -123,5 +124,13 @@ export class RoomsController {
     return this.roomsService.update(id, updateRoomDto, files, req.user);
   }
 
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async delete(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req,
+  ) {
+    return this.roomsService.delete(id, req.user);
+  }
 
 }

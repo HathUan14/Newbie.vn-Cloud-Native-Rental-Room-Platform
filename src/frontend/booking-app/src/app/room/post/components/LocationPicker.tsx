@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
+import locationData from '../../../data.json';
 
 const MapContainer = dynamic(
     () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -35,29 +36,91 @@ function LocationPicker({ onLocationSelect, initialPosition, cityCode, districtC
         }
     }, []);
 
+    // Update map position when location selection changes
     useEffect(() => {
         if (!map) return;
-        const findLoc = (code: string, type: 'city' | 'district' | 'ward') => {
-            return null;
-        };
+
+        // Find location coordinates from data.json
+        let targetLat: number | null = null;
+        let targetLng: number | null = null;
+        let zoomLevel = 13;
+
+        if (cityCode) {
+            const city = locationData.cities.find(c => c.city_code === cityCode);
+            if (city) {
+                targetLat = city.lat;
+                targetLng = city.long;
+                zoomLevel = 11;
+
+                if (districtCode) {
+                    const district = city.districts.find(d => d.district_code === districtCode);
+                    if (district) {
+                        targetLat = district.lat;
+                        targetLng = district.long;
+                        zoomLevel = 13;
+
+                        if (wardCode) {
+                            const ward = district.wards.find(w => w.ward_code === wardCode);
+                            if (ward) {
+                                targetLat = ward.lat;
+                                targetLng = ward.long;
+                                zoomLevel = 15;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Pan and zoom to the location
+        if (targetLat && targetLng) {
+            const newPos: [number, number] = [targetLat, targetLng];
+            setPosition(newPos);
+            map.flyTo(newPos, zoomLevel, {
+                duration: 1.5,
+                easeLinearity: 0.25
+            });
+        }
     }, [cityCode, districtCode, wardCode, map]);
+
+    // Sync position with initialPosition prop changes
+    useEffect(() => {
+        if (initialPosition[0] !== position[0] || initialPosition[1] !== position[1]) {
+            setPosition(initialPosition);
+            if (map) {
+                map.flyTo(initialPosition, map.getZoom(), {
+                    duration: 1
+                });
+            }
+        }
+    }, [initialPosition, map]);
 
     const MapEvents = () => {
         const { useMapEvents } = require('react-leaflet');
-        useMapEvents({
+        const mapInstance = useMapEvents({
             click(e: any) {
-                const newPos = [e.latlng.lat, e.latlng.lng];
+                const newPos: [number, number] = [e.latlng.lat, e.latlng.lng];
                 setPosition(newPos);
                 onLocationSelect(e.latlng.lat, e.latlng.lng);
             },
         });
+
+        // Store map instance
+        useEffect(() => {
+            setMap(mapInstance);
+        }, [mapInstance]);
+
         return null;
     };
 
     if (!isClient) return <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />;
 
     return (
-        <MapContainer center={position} zoom={13} style={{ height: '350px', width: '100%', borderRadius: '1rem', zIndex: 0 }}>
+        <MapContainer 
+            center={position} 
+            zoom={13} 
+            style={{ height: '350px', width: '100%', borderRadius: '1rem', zIndex: 0 }}
+        >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapEvents />
             <Marker position={position} />

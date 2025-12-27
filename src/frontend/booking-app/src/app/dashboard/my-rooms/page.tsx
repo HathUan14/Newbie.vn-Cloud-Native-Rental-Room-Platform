@@ -1,351 +1,562 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { BookingCard, RejectModal } from '@/components/BookingCard';
 
+// Icons tối giản
 const Icons = {
-    Mail: () => <svg className="w-16 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>,
-    CheckCircle: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-    Edit: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>,
-    Plus: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
-    Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-    Eye: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-    Trash: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+    Home: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>,
+    Plus: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>,
+    List: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>,
+    Mail: () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>,
+    Clock: () => <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+    UserRequest: () => (
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 13l2 2m0 0l2-2m-2 2v6" />
+        </svg>
+    )
 };
 
-export default function MyPostsPage() {
+export default function MyRoomsDashboard() {
     const searchParams = useSearchParams();
     const { user } = useAuth();
+    const [activeView, setActiveView] = useState<'rooms' | 'bookings'>('rooms');
     const [posts, setPosts] = useState<any[]>([]);
+    const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [resending, setResending] = useState(false);
-    const [filterStatus, setFilterStatus] = useState<string>('ALL');
+    const [bookingsLoading, setBookingsLoading] = useState(false);
+    const [filterStatus, setFilterStatus] = useState('ALL');
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [roomToDelete, setRoomToDelete] = useState<{ id: number; title: string } | null>(null);
+    const [processingBookingId, setProcessingBookingId] = useState<number | null>(null);
+    const [showRejectModal, setShowRejectModal] = useState<number | null>(null);
 
-    const status = searchParams.get('status');
+    const statusMsg = searchParams.get('status');
 
     useEffect(() => {
         const fetchMyRooms = async () => {
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-                const res = await fetch(`${API_URL}/rooms/my-rooms`, {
-                    credentials: 'include'
-                });
+                const res = await fetch(`${API_URL}/rooms/my-rooms`, { credentials: 'include' });
                 const data = await res.json();
-                if (data.success) {
-                    setPosts(data.data.map((room: any) => ({
-                        ...room,
-                        pricePerMonth: Number(room.pricePerMonth),
-                        area: Number(room.area),
-                        images: room.images || []
-                    })));
-                }
+                if (data.success) setPosts(data.data);
             } catch (error) {
-                console.error(error);
-                toast.error("Không thể tải danh sách tin");
-            } finally {
-                setLoading(false);
-            }
+                toast.error("Không thể tải danh sách");
+            } finally { setLoading(false); }
         };
-
         if (user) fetchMyRooms();
     }, [user]);
 
-    // 2. Hàm gửi lại email xác thực (Chỉ gọi khi bấm nút)
-    const handleResendEmail = async () => {
+    const fetchBookings = async () => {
+        if (!user) return;
+        setBookingsLoading(true);
         try {
-            setResending(true);
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-            const res = await fetch(`${API_URL}/auth/resend-verification`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+            const res = await fetch(`${API_URL}/booking/host-bookings`, {
+                credentials: 'include'
             });
-
-            if (res.ok) {
-                toast.success("Đã gửi lại email kích hoạt!");
+            const data = await res.json();
+            if (data.success) {
+                setBookings(data.data);
             } else {
-                toast.error("Gửi thất bại, vui lòng thử lại sau.");
+                toast.error(data.msg || 'Không thể tải danh sách booking');
             }
         } catch (error) {
-            toast.error("Lỗi kết nối.");
+            toast.error('Lỗi khi tải booking');
         } finally {
-            setResending(false);
+            setBookingsLoading(false);
         }
     };
 
-    // Filter posts
-    const filteredPosts = filterStatus === 'ALL'
-        ? posts
-        : posts.filter(p => p.moderationStatus === filterStatus);
+    useEffect(() => {
+        if (activeView === 'bookings') {
+            fetchBookings();
+        }
+    }, [activeView, user]);
 
-    // Stats
-    const stats = {
-        total: posts.length,
-        draft: posts.filter(p => p.moderationStatus === 'DRAFT').length,
-        pending: posts.filter(p => p.moderationStatus === 'PENDING').length,
-        approved: posts.filter(p => p.moderationStatus === 'APPROVED').length,
-        rejected: posts.filter(p => p.moderationStatus === 'REJECTED').length,
-        needs_edit: posts.filter(p => p.moderationStatus === 'NEEDS_EDIT').length,
+    const handleDelete = (roomId: number, roomTitle: string) => {
+        setRoomToDelete({ id: roomId, title: roomTitle });
+        setIsDeleteModalOpen(true);
     };
 
+    const confirmDelete = async () => {
+        if (!roomToDelete) return;
+
+        try {
+            setDeletingId(roomToDelete.id);
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+            const res = await fetch(`${API_URL}/rooms/${roomToDelete.id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                toast.success('Đã xóa phòng thành công!');
+                setPosts(posts.filter(p => p.id !== roomToDelete.id));
+                setIsDeleteModalOpen(false);
+                setRoomToDelete(null);
+            } else {
+                toast.error(data.message || 'Không thể xóa phòng');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Lỗi khi xóa phòng');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const cancelDelete = () => {
+        setIsDeleteModalOpen(false);
+        setRoomToDelete(null);
+    };
+
+    const handleApproveBooking = async (bookingId: number) => {
+        if (!confirm('Xác nhận chấp nhận yêu cầu này?')) return;
+        setProcessingBookingId(bookingId);
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+            const res = await fetch(`${API_URL}/booking/host-process/${bookingId}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'APPROVED' }),
+            });
+            const result = await res.json();
+            if (result.success) {
+                toast.success('✅ Đã chấp nhận yêu cầu');
+                fetchBookings();
+            } else {
+                toast.error(result.msg || 'Không thể xử lý');
+            }
+        } catch (err) {
+            toast.error('Lỗi kết nối');
+        } finally {
+            setProcessingBookingId(null);
+        }
+    };
+
+    const handleRejectBooking = async (bookingId: number, reason: string) => {
+        if (!reason.trim()) {
+            toast.error('Vui lòng nhập lý do từ chối');
+            return;
+        }
+        setProcessingBookingId(bookingId);
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+            const res = await fetch(`${API_URL}/booking/host-process/${bookingId}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }),
+            });
+            const result = await res.json();
+            if (result.success) {
+                toast.success('✅ Đã từ chối yêu cầu');
+                setShowRejectModal(null);
+                fetchBookings();
+            } else {
+                toast.error(result.msg || 'Không thể xử lý');
+            }
+        } catch (err) {
+            toast.error('Lỗi kết nối');
+        } finally {
+            setProcessingBookingId(null);
+        }
+    };
+
+    const filteredPosts = filterStatus === 'ALL' ? posts : posts.filter(p => p.moderationStatus === filterStatus);
+
     return (
-        <div className="min-h-screen bg-slate-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex min-h-screen bg-gray-50">
+            <aside className="w-72 bg-white border-r border-gray-200 hidden lg:flex flex-col fixed left-0 top-16 h-[calc(100vh-4rem)] overflow-y-auto shadow-sm z-40">
+                {/* Navigation */}
+                <div className="flex-1 p-4 overflow-y-auto">
+                    <nav className="space-y-8">
+                        {/* Nhóm chính */}
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-900">Tin đăng của tôi</h1>
-                            <p className="text-slate-600 mt-1">Quản lý và theo dõi trạng thái tin đăng</p>
-                        </div>
-                        <Link
-                            href="/room/post"
-                            className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-slate-800 transition-colors shadow-sm"
-                        >
-                            <Icons.Plus /> Đăng tin mới
-                        </Link>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        <StatCard
-                            label="Tất cả"
-                            count={stats.total}
-                            color="slate"
-                            active={filterStatus === 'ALL'}
-                            onClick={() => setFilterStatus('ALL')}
-                        />
-                        <StatCard
-                            label="Nháp"
-                            count={stats.draft}
-                            color="gray"
-                            active={filterStatus === 'DRAFT'}
-                            onClick={() => setFilterStatus('DRAFT')}
-                        />
-                        <StatCard
-                            label="Cần chỉnh sửa"
-                            count={stats.needs_edit}
-                            color="blue"
-                            active={filterStatus === 'NEEDS_EDIT'}
-                            onClick={() => setFilterStatus('NEEDS_EDIT')}
-                        />
-                        <StatCard
-                            label="Chờ duyệt"
-                            count={stats.pending}
-                            color="blue"
-                            active={filterStatus === 'PENDING'}
-                            onClick={() => setFilterStatus('PENDING')}
-                        />
-                        
-                        <StatCard
-                            label="Đã duyệt"
-                            count={stats.approved}
-                            color="emerald"
-                            active={filterStatus === 'APPROVED'}
-                            onClick={() => setFilterStatus('APPROVED')}
-                        />
-                        <StatCard
-                            label="Từ chối"
-                            count={stats.rejected}
-                            color="red"
-                            active={filterStatus === 'REJECTED'}
-                            onClick={() => setFilterStatus('REJECTED')}
-                        />
-                    </div>
-                </div>
-
-                {/* Alerts */}
-                {status==='verification_needed' && (
-                    <div className="mb-6 bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                            <Icons.Mail />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-slate-900 text-sm font-medium">
-                                Tin đăng phòng đã được lưu nháp. Vui lòng xác thực email <span className="font-semibold">{user?.email}</span> để đăng tin
-                            </p>
-                            <div className="flex items-center gap-3 mt-2">
-                                <button
-                                    onClick={() => window.open('https://mail.google.com', '_blank')}
-                                    className="text-l font-medium text-blue-600 hover:text-blue-700"
-                                >
-                                    Mở Gmail
-                                </button>
-                                <span className="text-slate-300 text-xs">•</span>
-                                <button
-                                    onClick={handleResendEmail}
-                                    disabled={resending}
-                                    className="text-l font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
-                                >
-                                    {resending ? 'Đang gửi...' : 'Gửi lại email'}
-                                </button>
+                            <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Quản lý</p>
+                            <div className="space-y-1">
+                                <SidebarLink onClick={() => setActiveView('rooms')} icon={<Icons.List />} label="Tin đăng của tôi" active={activeView === 'rooms'} />
+                                <SidebarLink href="/room/post" icon={<Icons.Plus />} label="Đăng tin mới" />
                             </div>
                         </div>
-                    </div>
-                )}
 
-                {status === 'success' && (
-                    <div className="mb-6 bg-white border border-green-200 rounded-xl p-5 flex items-start gap-4 shadow-sm">
-                        <div className="flex-shrink-0 w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
-                            <Icons.CheckCircle />
-                        </div>
+                        {/* Nhóm tương tác */}
                         <div>
-                            <h3 className="font-semibold text-slate-900 text-sm">Đã gửi tin thành công</h3>
-                            <p className="text-slate-600 text-sm mt-1">
-                                Tin đăng đang chờ kiểm duyệt, sẽ được phê duyệt trong thời gian sớm nhất
-                            </p>
+                            <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">Tương tác</p>
+                            <div className="space-y-1">
+                                <SidebarLink
+                                    onClick={() => setActiveView('bookings')}
+                                    icon={<Icons.UserRequest />}
+                                    label="Yêu cầu thuê"
+                                    badge={bookings.filter(b => b.status === 'PENDING').length > 0 ? bookings.filter(b => b.status === 'PENDING').length.toString() : undefined}
+                                    active={activeView === 'bookings'}
+                                />
+                                <SidebarLink
+                                    href="#"
+                                    icon={<Icons.Mail />}
+                                    label="Hộp thư"
+                                    badge="2"
+                                />
+                            </div>
                         </div>
-                    </div>
-                )}
+                    </nav>
+                </div>
+            </aside>
 
-                {/* Posts Grid */}
-                {loading ? (
-                    <div className="space-y-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="h-32 bg-white rounded-xl animate-pulse" />
-                        ))}
-                    </div>
-                ) : posts.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
-                        <p className="text-slate-500 mb-3">Chưa có tin đăng nào</p>
-                        <Link href="/room/post" className="text-slate-900 font-medium hover:underline">
-                            Tạo tin đăng đầu tiên →
-                        </Link>
-                    </div>
+            {/* Nội dung chính */}
+            <main className="flex-1 lg:ml-72 p-6 lg:p-10 pt-20">
+                {activeView === 'rooms' ? (
+                    <>
+                        {/* Header */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-900">Quản lý tin đăng</h1>
+                                <p className="text-slate-500 text-sm">Bạn đang có {posts.length} phòng đang quản lý</p>
+                            </div>
+                            <Link href="/room/post" className="flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition-all text-sm shadow-lg shadow-slate-200">
+                                <Icons.Plus /> Đăng tin mới
+                            </Link>
+                        </div>
+
+                        {/* Cảnh báo xác thực Email (Nếu có) */}
+                        {statusMsg === 'verification_needed' && (
+                            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-8 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm">
+                                        <Icons.Mail />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900">Xác thực email để hiển thị tin</p>
+                                        <p className="text-xs text-slate-600">Chúng tôi đã gửi link tới <b>{user?.email}</b></p>
+                                    </div>
+                                </div>
+                                <button className="text-sm font-bold text-blue-600 hover:underline">Gửi lại link</button>
+                            </div>
+                        )}
+
+                        {/* Bộ lọc trạng thái */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 no-scrollbar">
+                            {[
+                                { key: 'ALL', label: 'Tất cả' },
+                                { key: 'DRAFT', label: 'Nháp' },
+                                { key: 'PENDING', label: 'Chờ duyệt' },
+                                { key: 'APPROVED', label: 'Đang hiển thị' },
+                                { key: 'NEEDS_EDIT', label: 'Cần sửa' },
+                                { key: 'REJECTED', label: 'Bị từ chối' }
+                            ].map((status) => (
+                                <button
+                                    key={status.key}
+                                    onClick={() => setFilterStatus(status.key)}
+                                    className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border
+                                        ${filterStatus === status.key
+                                            ? 'bg-slate-900 text-white border-slate-900'
+                                            : 'bg-white text-slate-500 border-gray-100 hover:border-gray-300'}`}
+                                >
+                                    {status.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Danh sách phòng */}
+                        {loading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+                                {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-200 animate-pulse" />)}
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+                                {filteredPosts.map((room) => (
+                                    <SimpleRoomCard 
+                                        key={room.id} 
+                                        room={room} 
+                                        onDelete={handleDelete}
+                                        deleting={deletingId === room.id}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 ) : (
-                    <div className="space-y-3">
-                        {filteredPosts.map((room) => (
-                            <PostCard key={room.id} room={room} />
-                        ))}
+                    /* Bookings View */
+                    <div>
+
+                        {bookingsLoading ? (
+                            <div className="space-y-4">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="h-48 bg-gray-200 animate-pulse rounded-xl" />
+                                ))}
+                            </div>
+                        ) : bookings.length === 0 ? (
+                            <div className="text-center py-16">
+                                <div className="mx-auto w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                    <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-2">Chưa có yêu cầu thuê</h3>
+                                <p className="text-slate-500">Các yêu cầu thuê phòng sẽ hiển thị ở đây</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {bookings.map((booking: any) => (
+                                    <BookingCard
+                                        key={booking.id}
+                                        booking={booking}
+                                        onApprove={handleApproveBooking}
+                                        onReject={(id) => setShowRejectModal(id)}
+                                        isProcessing={processingBookingId === booking.id}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
+            </main>
+
+            {/* Delete Confirmation Modal */}
+            {isDeleteModalOpen && roomToDelete && (
+                <DeleteModal
+                    roomTitle={roomToDelete.title}
+                    onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
+                    isDeleting={deletingId === roomToDelete.id}
+                />
+            )}
+
+            {/* Reject Booking Modal */}
+            {showRejectModal && (
+                <RejectModal
+                    onClose={() => setShowRejectModal(null)}
+                    onSubmit={(reason) => handleRejectBooking(showRejectModal, reason)}
+                    isProcessing={processingBookingId === showRejectModal}
+                />
+            )}
+        </div>
+    );
+}
+
+// --- Component phụ trợ ---
+
+function DeleteModal({ roomTitle, onConfirm, onCancel, isDeleting }: {
+    roomTitle: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+    isDeleting: boolean;
+}) {
+    return (
+        // Lớp nền cực nhẹ, gần như trong suốt để không làm tối màn hình
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-200/20 animate-in fade-in duration-200">
+            {/* Hộp thoại phẳng, gọn gàng */}
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 max-w-sm w-full p-8 animate-in zoom-in-95 duration-200">
+                
+                {/* Icon đơn giản */}
+                <div className="mx-auto w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+
+                {/* Nội dung */}
+                <div className="text-center mb-8">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">Xóa tin đăng?</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">
+                        Bạn có chắc chắn muốn xóa <span className="font-semibold text-slate-700">"{roomTitle}"</span>? Thao tác này sẽ xóa vĩnh viễn dữ liệu.
+                    </p>
+                </div>
+
+                {/* Nút bấm thiết kế phẳng hiện đại */}
+                <div className="flex flex-col gap-2">
+                    <button
+                        onClick={onConfirm}
+                        disabled={isDeleting}
+                        className="w-full py-3 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-2xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                        {isDeleting ? (
+                            <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                        ) : "Xác nhận xóa"}
+                    </button>
+                    
+                    <button
+                        onClick={onCancel}
+                        disabled={isDeleting}
+                        className="w-full py-3 text-sm font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-2xl transition-all disabled:opacity-50"
+                    >
+                        Quay lại
+                    </button>
+                </div>
             </div>
         </div>
     );
 }
 
-// Stat Card Component
-function StatCard({ label, count, color, active, onClick }: {
-    label: string;
-    count: number;
-    color: string;
-    active: boolean;
-    onClick: () => void;
-}) {
-    // Màu thống nhất khi active
-    const activeBg = 'bg-slate-600';
-    const activeBorder = 'border-slate-900';
-    const activeText = 'text-white';
+function SidebarLink({ href, onClick, icon, label, active = false, badge }: any) {
+    const className = `flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all ${
+        active 
+            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' 
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+    }`;
 
-    // Màu khi không active dựa vào color prop
-    const inactiveClasses = {
-        slate: 'bg-white text-slate-700 border-slate-200 hover:border-slate-300',
-        gray: 'bg-white text-slate-700 border-slate-200 hover:border-slate-300',
-        blue: 'bg-white text-slate-700 border-slate-200 hover:border-slate-300',
-        emerald: 'bg-white text-slate-700 border-slate-200 hover:border-slate-300',
-        red: 'bg-white text-slate-700 border-slate-200 hover:border-slate-300',
-    }[color] || 'bg-white text-slate-700 border-slate-200 hover:border-slate-300';
+    const content = (
+        <>
+            <div className="flex items-center gap-3">
+                <span className={active ? 'text-white' : 'text-slate-400'}>{icon}</span>
+                <span>{label}</span>
+            </div>
+            {badge && (
+                <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                    {badge}
+                </span>
+            )}
+        </>
+    );
+
+    if (onClick) {
+        return (
+            <button onClick={onClick} className={className}>
+                {content}
+            </button>
+        );
+    }
 
     return (
-        <button
-            onClick={onClick}
-            className={`border rounded-lg p-4 transition-all cursor-pointer text-left 
-                ${active ? `${activeBg} ${activeText} ${activeBorder}` : inactiveClasses}`}
-        >
-            <div className={`text-2xl font-bold ${active ? 'text-white' : 'text-slate-900'}`}>{count}</div>
-            <div className={`text-xs font-medium mt-1 ${active ? 'text-white/80' : 'text-slate-600'}`}>{label}</div>
-        </button>
+        <Link href={href} className={className}>
+            {content}
+        </Link>
     );
 }
 
-
-function PostCard({ room }: { room: any }) {
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case 'DRAFT': return 'bg-slate-100 text-slate-700';
-            case 'PENDING': return 'bg-blue-100 text-blue-700';
-            case 'APPROVED': return 'bg-emerald-100 text-emerald-700';
-            case 'REJECTED': return 'bg-red-100 text-red-700';
-            default: return 'bg-slate-100 text-slate-600';
+function SimpleRoomCard({ room, onDelete, deleting }: { 
+    room: any; 
+    onDelete: (id: number, title: string) => void;
+    deleting: boolean;
+}) {
+    const getStatusBadge = (status: string) => {
+        switch(status) {
+            case 'APPROVED': return { label: 'Đang hoạt động', color: 'bg-emerald-500' };
+            case 'PENDING': return { label: 'Chờ duyệt', color: 'bg-amber-500' };
+            case 'REJECTED': return { label: 'Bị từ chối', color: 'bg-red-500' };
+            case 'NEEDS_EDIT': return { label: 'Cần sửa', color: 'bg-orange-500' };
+            case 'DRAFT': return { label: 'Nháp', color: 'bg-gray-500' };
+            default: return { label: 'Nháp', color: 'bg-gray-500' };
         }
     };
 
-    const getStatusLabel = (status: string) => {
-        switch (status) {
-            case 'DRAFT': return 'Nháp';
-            case 'PENDING': return 'Chờ duyệt';
-            case 'APPROVED': return 'Đang hiển thị';
-            case 'REJECTED': return 'Bị từ chối';
-            case 'NEEDS_EDIT': return 'Cần chỉnh sửa'
-            default: return status;
-        }
-    };
-
-    const thumbnail = room.images?.[0]?.imageUrl || 'https://placehold.co/600x400?text=No+Image';
+    const statusBadge = getStatusBadge(room.moderationStatus);
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden group">
-            <div className="p-5 flex gap-5">
-                {/* Thumbnail */}
-                <div className="relative w-48 h-32 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100">
-                    <Image
-                        src={thumbnail}
-                        alt={room.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <span className={`absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-semibold ${getStatusStyle(room.moderationStatus)}`}>
-                        {getStatusLabel(room.moderationStatus)}
+        <div className="bg-white border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-300 group">
+            {/* Image Section */}
+            <div className="relative h-56 overflow-hidden">
+                <Image
+                    src={room.images?.[0]?.imageUrl || 'https://placehold.co/600x400'}
+                    alt={room.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {/* Status Badge */}
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/50 to-transparent p-4">
+                    <span className={`inline-flex items-center px-3 py-1.5 text-xs font-bold text-white ${statusBadge.color} shadow-lg`}>
+                        {statusBadge.label}
                     </span>
                 </div>
+            </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
+            {/* Content Section */}
+            <div className="p-5">
+                {/* Title */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                    {room.title}
+                </h3>
+
+                {/* Location */}
+                <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="truncate">{room.district}, {room.city}</span>
+                </div>
+
+                {/* Price & Area */}
+                <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-100">
                     <div>
-                        <h3 className="font-bold text-slate-900 text-lg line-clamp-2 mb-2 group-hover:text-slate-700 transition-colors">
-                            {room.title}
-                        </h3>
-
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">
-                            <span className="font-semibold text-slate-900">
-                                {new Intl.NumberFormat('vi-VN').format(room.pricePerMonth)} đ/tháng
-                            </span>
-                            <span className="text-slate-300">•</span>
-                            <span>{room.area} m²</span>
-                            <span className="text-slate-300">•</span>
-                            <span className="truncate max-w-[300px]">{room.district}, {room.city}</span>
-                        </div>
+                        <p className="text-xs text-gray-500 font-semibold mb-1">Giá thuê</p>
+                        <p className="text-lg font-black text-blue-600">
+                            {new Intl.NumberFormat('vi-VN').format(room.pricePerMonth)}
+                            <span className="text-xs font-normal text-gray-500">đ/tháng</span>
+                        </p>
                     </div>
+                    <div>
+                        <p className="text-xs text-gray-500 font-semibold mb-1">Diện tích</p>
+                        <p className="text-lg font-black text-gray-900">
+                            {room.area}
+                            <span className="text-sm font-normal text-gray-500">m²</span>
+                        </p>
+                    </div>
+                </div>
 
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                            <Icons.Clock />
-                            <span>Cập nhật {new Date(room.updatedAt).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        {room.moderationStatus !== 'REJECTED' && (
-                        <div className="flex gap-2">
-                            <Link
-                                href={`/rooms/${room.id}`}
-                                target="_blank"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:text-slate-900 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                {/* Footer */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <Icons.Clock />
+                        <span>{new Date(room.updatedAt).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <Link 
+                            href={`/room/edit/${room.id}`} 
+                            className="p-2.5 bg-gray-100 hover:bg-gray-900 hover:text-white text-gray-700 transition-all duration-200 group/btn"
+                            title="Chỉnh sửa"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                        </Link>
+                        {room.moderationStatus === 'APPROVED' && (
+                            <Link 
+                                href={`/rooms/${room.id}`} 
+                                className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 shadow-sm hover:shadow-md"
+                                title="Xem chi tiết"
                             >
-                                <Icons.Eye /> Xem
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
                             </Link>
-                            <Link
-                                href={`/room/edit/${room.id}`}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-slate-800 text-white text-xs font-medium rounded-lg transition-colors"
-                            >
-                                <Icons.Edit /> Chỉnh sửa
-                            </Link>
-                        </div>)}
-                    </div> 
+                        )}
+                        <button
+                            onClick={() => onDelete(room.id, room.title)}
+                            disabled={deleting}
+                            className="p-2.5 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Xóa phòng"
+                        >
+                            {deleting ? (
+                                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                            ) : (
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
+

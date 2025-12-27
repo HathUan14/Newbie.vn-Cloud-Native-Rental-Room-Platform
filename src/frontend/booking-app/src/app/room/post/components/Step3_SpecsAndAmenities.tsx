@@ -59,19 +59,18 @@ const Step3_SpecsAndAmenities: React.FC<Step3Props> = ({ formData, handleInputCh
                 <h4 className="text-lg font-semibold mb-4">🛋️ Nội thất phòng</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {FURNISHED_AMENITIES.map(am => {
-                        // Sửa logic check ID (ép kiểu string để so sánh an toàn)
                         const isSelected = formData.amenities.includes(am.id.toString());
                         return (
                             <div
-                                key={am.id} // Dùng ID làm key
-                                onClick={() => toggleAmenity(am.id)} // Gọi hàm toggle mới
-                                className={`cursor-pointer p-3 rounded-xl border flex items-center space-x-3 transition-all ${isSelected ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600' : 'border-gray-200 hover:border-gray-400'}`}
+                                key={am.id} 
+                                onClick={() => toggleAmenity(am.id)} 
+                                className={`cursor-pointer p-3 rounded-xl border flex items-center space-x-3 transition-all ${isSelected ? 'border-blue-600 bg-indigo-50 ring-2 ring-blue-600' : 'border-gray-200 hover:border-gray-400'}`}
                             >
                                 <div
-                                    className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-indigo-600' : 'text-gray-600'}`}
+                                    className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}
                                     dangerouslySetInnerHTML={{ __html: am.icon }}
                                 />
-                                <span className={`text-sm ${isSelected ? 'font-semibold text-indigo-900' : 'text-gray-700'}`}>{am.name}</span>
+                                <span className={`text-sm ${isSelected ? 'font-semibold text-blue-600' : 'text-gray-700'}`}>{am.name}</span>
                             </div>
                         )
                     })}
@@ -88,13 +87,13 @@ const Step3_SpecsAndAmenities: React.FC<Step3Props> = ({ formData, handleInputCh
                             <div
                                 key={am.id}
                                 onClick={() => toggleAmenity(am.id)}
-                                className={`cursor-pointer p-3 rounded-xl border flex items-center space-x-3 transition-all ${isSelected ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600' : 'border-gray-200 hover:border-gray-400'}`}
+                                className={`cursor-pointer p-3 rounded-xl border flex items-center space-x-3 transition-all ${isSelected ? 'border-blue-600 bg-indigo-50 ring-2 ring-blue-600' : 'border-gray-200 hover:border-gray-400'}`}
                             >
                                 <div
-                                    className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-indigo-600' : 'text-gray-600'}`}
+                                    className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`}
                                     dangerouslySetInnerHTML={{ __html: am.icon }}
                                 />
-                                <span className={`text-sm ${isSelected ? 'font-semibold text-indigo-900' : 'text-gray-700'}`}>{am.name}</span>
+                                <span className={`text-sm ${isSelected ? 'font-semibold text-blue-600' : 'text-gray-700'}`}>{am.name}</span>
                             </div>
                         )
                     })}

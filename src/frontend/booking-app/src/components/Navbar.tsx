@@ -16,9 +16,9 @@ export default function Navbar() {
   const isAuthenticated = !!user;
   const handleHostClick = () => {
     if (isAuthenticated) {
-      router.push("/host/dashboard");
+      router.push("/room/post");
     } else {
-      router.push("/login?redirect=/host/dashboard");
+      router.push("/login?redirect=/room/post");
     }
   };
 
@@ -96,16 +96,16 @@ export default function Navbar() {
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 bg-white rounded-lg shadow-xl py-2 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-64 min-w-[256px] bg-white rounded-lg shadow-xl py-2 border border-gray-200">
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-l font-semibold text-gray-900">
+                      <p className="text-l font-semibold text-gray-900 truncate">
                         {user?.fullName}
                       </p>
-                      <p className="text-l text-gray-500">{user?.email}</p>
+                      <p className="text-l text-gray-500 truncate">{user?.email}</p>
                     </div>
                     <Link
                       href="/profile"
-                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
                       <div className="flex items-center gap-2">
                         <svg
@@ -125,8 +125,8 @@ export default function Navbar() {
                       </div>
                     </Link>
                     <Link
-                      href="/bookings"
-                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
+                      href="dashboard/bookings"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
                       <div className="flex items-center gap-2">
                         <svg
@@ -145,31 +145,11 @@ export default function Navbar() {
                         Đặt phòng của tôi
                       </div>
                     </Link>
-                    <Link
-                      href="/favorites"
-                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                          />
-                        </svg>
-                        Yêu thích
-                      </div>
-                    </Link>
+   
                     <hr className="my-2" />
                     <Link
-                      href="/host/dashboard"
-                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors"
+                      href="/dashboard/my-rooms"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
                       <div className="flex items-center gap-2">
                         <svg
@@ -191,7 +171,7 @@ export default function Navbar() {
                     <hr className="my-2" />
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-l text-red-600 hover:bg-red-50 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-l text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
                     >
                       <div className="flex items-center gap-2">
                         <svg
@@ -231,106 +211,9 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-50 focus:outline-none"
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                {isMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
-            </button>
-          </div>
+
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <div className="border-t border-gray-200 my-2"></div>
-
-            <button
-              onClick={handleHostClick}
-              className="w-full mx-3 px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all"
-            >
-              Cho thuê phòng
-            </button>
-
-            {isAuthenticated ? (
-              <>
-                <div className="border-t border-gray-200 my-2"></div>
-                <Link
-                  href="/profile"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                >
-                  Tài khoản
-                </Link>
-                <Link
-                  href="/bookings"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                >
-                  Đặt phòng của tôi
-                </Link>
-                <Link
-                  href="/favorites"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                >
-                  Yêu thích
-                </Link>
-                <Link
-                  href="/host/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                >
-                  Quản lý phòng
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
-                >
-                  Đăng xuất
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="border-t border-gray-200 my-2"></div>
-                <Link
-                  href="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                >
-                  Đăng nhập
-                </Link>
-                <Link
-                  href="/register"
-                  className="block mx-3 py-2 text-center rounded-lg text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Đăng ký
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

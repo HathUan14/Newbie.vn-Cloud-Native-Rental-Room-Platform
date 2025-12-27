@@ -70,10 +70,16 @@ export class RoomsService {
         );
       }
 
-      // Location filters
-      if (city) query.andWhere('room.city ILIKE :city', { city: `%${city}%` });
-      if (district) query.andWhere('room.district ILIKE :district', { district: `%${district}%` });
-      if (ward) query.andWhere('room.ward ILIKE :ward', { ward: `%${ward}%` });
+      // Location filters - EXACT MATCH
+      if (city) {
+        query.andWhere('room.city = :city', { city });
+      }
+      if (district) {
+        query.andWhere('room.district = :district', { district });
+      }
+      if (ward) {
+        query.andWhere('room.ward = :ward', { ward });
+      }
 
       // Price filter
       if (minPrice !== undefined) {
@@ -446,28 +452,53 @@ export class RoomsService {
     }
 
     // 3. Xử lý upload ảnh mới
+    let newImageIds: number[] = [];
     if (files && files.length > 0) {
       const uploadPromises = files.map(file => this.cloudinaryService.uploadImage(file));
       const uploadResults = await Promise.all(uploadPromises);
 
-      // Tạo entity RoomImage mới
-      const newImages = uploadResults.map((result, index) => {
+      // Tạo entity RoomImage mới (chưa set thumbnail ở đây)
+      const newImages = uploadResults.map((result) => {
         return this.roomImagesRepo.create({
           room: room,
           imageUrl: result.secure_url,
           publicId: result.public_id,
-          isThumbnail: index === dto.newCoverIndex
+          isThumbnail: false // Tạm thời set false
         });
       });
 
-      await this.roomImagesRepo.save(newImages);
+      const savedImages = await this.roomImagesRepo.save(newImages);
+      newImageIds = savedImages.map(img => img.id);
     }
 
+    // 4. Xử lý thumbnail: Reset tất cả về false trước
+    await this.roomImagesRepo.update(
+      { roomId: room.id },
+      { isThumbnail: false }
+    );
+
+    // 5. Set thumbnail cho ảnh được chọn
     if (dto.coverImageId) {
-      await this.roomImagesRepo.update(
-        { id: dto.coverImageId, roomId: room.id },
-        { isThumbnail: true }
-      );
+      // User chọn ảnh cũ làm thumbnail
+      const existingImage = await this.roomImagesRepo.findOne({
+        where: { id: dto.coverImageId, roomId: room.id }
+      });
+      
+      if (existingImage) {
+        await this.roomImagesRepo.update(
+          { id: dto.coverImageId },
+          { isThumbnail: true }
+        );
+      }
+    } else if (dto.newCoverIndex !== undefined && dto.newCoverIndex !== null && newImageIds.length > 0) {
+      // User chọn ảnh mới làm thumbnail
+      const newCoverId = newImageIds[dto.newCoverIndex];
+      if (newCoverId) {
+        await this.roomImagesRepo.update(
+          { id: newCoverId },
+          { isThumbnail: true }
+        );
+      }
     }
 
     const { deleteImageIds, ...updateData } = dto;
@@ -491,6 +522,41 @@ export class RoomsService {
       success: true,
       message: 'Cập nhật tin đăng thành công',
       data: updatedRoom
+    };
+  }
+
+  async delete(id: number, user: User) {
+    const room = await this.roomsRepository.findOne({
+      where: { id },
+      relations: ['images', 'host'],
+    });
+
+    if (!room) {
+      throw new NotFoundException('Không tìm thấy phòng trọ');
+    }
+
+    if (room.hostId !== user.id) {
+      throw new ForbiddenException('Không có quyền xóa phòng này');
+    }
+
+    // Xóa tất cả ảnh trên Cloudinary
+    if (room.images && room.images.length > 0) {
+      for (const img of room.images) {
+        if (img.publicId) {
+          try {
+            await this.cloudinaryService.deleteFile(img.publicId);
+          } catch (error) {
+            console.error(`Lỗi khi xóa ảnh ${img.publicId}:`, error);
+          }
+        }
+      }
+    }
+
+    await this.roomsRepository.remove(room);
+
+    return {
+      success: true,
+      message: 'Xóa tin đăng thành công'
     };
   }
 
