@@ -36,7 +36,14 @@ const Footer: React.FC<FooterProps> = ({ currentStep, setCurrentStep, isSubmitti
                     </button>
 
                     <button
-                        onClick={currentStep === STEPS.length ? handleSubmit : onNext}
+                        onClick={() => {
+                            if (currentStep === STEPS.length) {
+                                handleSubmit();
+                            } else {
+                                onNext();
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                        }}
                         disabled={isSubmitting}
                         className="bg-blue-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3.5 rounded-xl font-semibold text-lg shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 relative"
                     >

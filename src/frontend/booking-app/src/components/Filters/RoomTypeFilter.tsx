@@ -16,10 +16,10 @@ interface RoomTypeFilterProps {
 }
 
 const ROOM_TYPES = [
-  { value: 'ROOM' as RoomTypeEnum, label: 'Phòng trọ', icon: '🏠', desc: 'Phòng riêng 1-2 người' },
-  { value: 'STUDIO' as RoomTypeEnum, label: 'Chung cư mini', icon: '🏢', desc: 'Studio / Căn hộ nhỏ' },
-  { value: 'DORM' as RoomTypeEnum, label: 'Ký túc xá', icon: '🛌', desc: 'Ở ghép / Sleepbox' },
-  { value: 'HOUSE' as RoomTypeEnum, label: 'Nguyên căn', icon: '🏡', desc: 'Nhà hoặc căn hộ riêng' },
+  { value: 'ROOM' as RoomTypeEnum, label: 'Phòng trọ', desc: 'Phòng riêng 1-2 người' },
+  { value: 'STUDIO' as RoomTypeEnum, label: 'Chung cư mini', desc: 'Studio / Căn hộ nhỏ' },
+  { value: 'DORM' as RoomTypeEnum, label: 'Ký túc xá', desc: 'Ở ghép / Sleepbox' },
+  { value: 'HOUSE' as RoomTypeEnum, label: 'Nguyên căn', desc: 'Nhà hoặc căn hộ riêng' },
 ];
 
 export default function RoomTypeFilter({ value, onChange }: RoomTypeFilterProps) {
@@ -80,7 +80,7 @@ export default function RoomTypeFilter({ value, onChange }: RoomTypeFilterProps)
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{type.icon}</span>
+      
                     <div className="flex-1">
                       <div className={`font-medium ${
                         value === type.value ? 'text-blue-700' : 'text-gray-900'

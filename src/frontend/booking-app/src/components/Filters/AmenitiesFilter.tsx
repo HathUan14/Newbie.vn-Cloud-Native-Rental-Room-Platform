@@ -2,27 +2,19 @@
 
 import { useState } from 'react';
 import { Check, ChevronDown, Sparkles } from 'lucide-react';
-import AmenityIcon from '../AmenityIcon';
+import amenitiesData from './amenities.json';
 
 interface AmenitiesFilterProps {
   value: string[];
   onChange: (value: string[]) => void;
 }
 
-const AMENITIES = [
-  { id: 'wifi', label: 'WiFi miễn phí' },
-  { id: 'ac', label: 'Máy lạnh' },
-  { id: 'parking', label: 'Chỗ để xe' },
-  { id: 'kitchen', label: 'Kệ bếp' },
-  { id: 'washer', label: 'Máy giặt' },
-  { id: 'fridge', label: 'Tủ lạnh' },
-  { id: 'elevator', label: 'Thang máy' },
-  { id: 'security', label: 'An ninh 24/7' },
-  { id: 'bathroom', label: 'WC riêng' },
-  { id: 'bed', label: 'Giường' },
-  { id: 'wardrobe', label: 'Tủ quần áo' },
-  { id: 'balcony', label: 'Ban công' },
-];
+// ✅ Map dữ liệu từ JSON
+const AMENITIES = amenitiesData.map((amenity) => ({
+  id: amenity.slug,
+  label: amenity.amenity_name,
+  icon: amenity.icon,
+}));
 
 export default function AmenitiesFilter({ value, onChange }: AmenitiesFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -138,7 +130,12 @@ export default function AmenitiesFilter({ value, onChange }: AmenitiesFilterProp
                         </div>
 
                         {/* Icon */}
-                        <AmenityIcon amenityName={amenity.label} />
+                        <div 
+                          className={`w-5 h-5 flex-shrink-0 ${
+                            isSelected ? 'text-blue-600' : 'text-gray-600'
+                          }`}
+                          dangerouslySetInnerHTML={{ __html: amenity.icon }}
+                        />
 
                         {/* Label */}
                         <span className={`text-sm ${

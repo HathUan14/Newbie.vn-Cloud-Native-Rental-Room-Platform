@@ -25,12 +25,12 @@ export default function LocationFilter({ value, onChange }: LocationFilterProps)
 
   // Get available districts based on selected city
   const availableDistricts = tempValue.city
-    ? locationData.cities.find((c) => c.city_code === tempValue.city)?.districts || []
+    ? locationData.cities.find((c) => c.city_name === tempValue.city)?.districts || []
     : [];
 
   // Get available wards based on selected district
   const availableWards = tempValue.district
-    ? availableDistricts.find((d) => d.district_code === tempValue.district)?.wards || []
+    ? availableDistricts.find((d) => d.district_name === tempValue.district)?.wards || []
     : [];
 
   const handleApply = () => {
@@ -45,18 +45,14 @@ export default function LocationFilter({ value, onChange }: LocationFilterProps)
   // Get display text for the button
   const getDisplayText = () => {
     if (!value.city) return 'Vị trí';
-    
-    const cityName = locationData.cities.find((c) => c.city_code === value.city)?.city_name || '';
-    const districtName = availableDistricts.find((d) => d.district_code === value.district)?.district_name || '';
-    const wardName = availableWards.find((w) => w.ward_code === value.ward)?.ward_name || '';
 
-    if (value.ward && wardName) {
-      return `${wardName}, ${districtName}`;
+    if (value.ward) {
+      return `${value.ward}, ${value.district}`;
     }
-    if (value.district && districtName) {
-      return districtName;
+    if (value.district) {
+      return value.district;
     }
-    return cityName;
+    return value.city;
   };
 
   const isFiltered = value.city !== '' || value.district !== '' || value.ward !== '';
@@ -111,7 +107,7 @@ export default function LocationFilter({ value, onChange }: LocationFilterProps)
                 >
                   <option value="">Chọn Tỉnh/Thành phố</option>
                   {locationData.cities.map((city) => (
-                    <option key={city.city_code} value={city.city_code}>
+                    <option key={city.city_code} value={city.city_name}>
                       {city.city_name}
                     </option>
                   ))}
@@ -133,7 +129,7 @@ export default function LocationFilter({ value, onChange }: LocationFilterProps)
                 >
                   <option value="">Chọn Quận/Huyện</option>
                   {availableDistricts.map((district) => (
-                    <option key={district.district_code} value={district.district_code}>
+                    <option key={district.district_code} value={district.district_name}>
                       {district.district_name}
                     </option>
                   ))}
@@ -155,7 +151,7 @@ export default function LocationFilter({ value, onChange }: LocationFilterProps)
                 >
                   <option value="">Chọn Phường/Xã</option>
                   {availableWards.map((ward) => (
-                    <option key={ward.ward_code} value={ward.ward_code}>
+                    <option key={ward.ward_code} value={ward.ward_name}>
                       {ward.ward_name}
                     </option>
                   ))}

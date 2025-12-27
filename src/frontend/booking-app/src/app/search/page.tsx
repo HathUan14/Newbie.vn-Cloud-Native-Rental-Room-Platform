@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import SearchResultCard from '@/components/SearchResultCard';
 import PriceFilter from '@/components/Filters/PriceFilter';
 import AmenitiesFilter from '@/components/Filters/AmenitiesFilter';
@@ -14,7 +14,8 @@ import { SearchFilters, Room } from '@/types/search';
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  
+  const router = useRouter();
+
   const [filters, setFilters] = useState<SearchFilters>({
     priceRange: [0, 10000000],
     sizeRange: [0, 200],
@@ -38,6 +39,10 @@ export default function SearchPage() {
   useEffect(() => {
     fetchRooms();
   }, [filters, page]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -83,6 +88,11 @@ export default function SearchPage() {
       }
 
       console.log('🔍 Fetching rooms with params:', queryParams.toString());
+      console.log('📍 Location filter:', {
+        city: filters.location.city,
+        district: filters.location.district,
+        ward: filters.location.ward
+      });
 
       const response = await fetch(`http://localhost:3000/rooms?${queryParams}`, {
         method: 'GET',
@@ -96,7 +106,7 @@ export default function SearchPage() {
       }
 
       const result = await response.json();
-      
+
       console.log('✅ API Response:', result);
 
       // ✅ Map API response to Room type
@@ -146,13 +156,38 @@ export default function SearchPage() {
     setPage(1);
   };
 
-  const activeFiltersCount = 
+  const activeFiltersCount =
     (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000 ? 1 : 0) +
     (filters.sizeRange[0] > 0 || filters.sizeRange[1] < 200 ? 1 : 0) +
     (filters.amenities.length > 0 ? 1 : 0) +
     (filters.location.city || filters.location.district || filters.location.ward ? 1 : 0) +
     (filters.roomType ? 1 : 0) +
     (filters.gender !== 'ALL' ? 1 : 0);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (filters.location.city) params.set('city', filters.location.city);
+    if (filters.location.district) params.set('district', filters.location.district);
+    if (filters.location.ward) params.set('ward', filters.location.ward);
+    if (filters.roomType) params.set('roomType', filters.roomType);
+
+    if (filters.gender !== 'ALL') params.set('gender', filters.gender);
+
+    if (filters.priceRange[0] > 0) params.set('minPrice', filters.priceRange[0].toString());
+    if (filters.priceRange[1] < 10000000) params.set('maxPrice', filters.priceRange[1].toString());
+
+    if (filters.sizeRange[0] > 0) params.set('minArea', filters.sizeRange[0].toString());
+    if (filters.sizeRange[1] < 200) params.set('maxArea', filters.sizeRange[1].toString());
+
+    if (filters.sortBy !== 'newest') params.set('sort', filters.sortBy);
+    if (filters.amenities.length > 0) params.set('amenities', filters.amenities.join(','));
+    if (page > 1) params.set('page', page.toString());
+
+    const queryString = params.toString();
+    router.push(queryString ? `?${queryString}` : '/search', { scroll: false });
+
+  }, [filters, page]); 
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,27 +200,27 @@ export default function SearchPage() {
               value={filters.roomType as any}
               onChange={(value) => setFilters({ ...filters, roomType: value })}
             />
-            
+
             <LocationFilter
               value={filters.location}
               onChange={(value) => setFilters({ ...filters, location: value })}
             />
-            
+
             <PriceFilter
               value={filters.priceRange}
               onChange={(value) => setFilters({ ...filters, priceRange: value })}
             />
-            
+
             <SizeFilter
               value={filters.sizeRange}
               onChange={(value) => setFilters({ ...filters, sizeRange: value })}
             />
-            
+
             <GenderFilter
               value={filters.gender as any}
               onChange={(value) => setFilters({ ...filters, gender: value })}
             />
-            
+
             <AmenitiesFilter
               value={filters.amenities}
               onChange={(value) => setFilters({ ...filters, amenities: value })}
@@ -216,26 +251,6 @@ export default function SearchPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 border border-gray-300 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-gray-200' : 'hover:bg-gray-100'}`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              </div>
-
               <SortDropdown
                 value={filters.sortBy}
                 onChange={(value) => setFilters({ ...filters, sortBy: value as any })}
@@ -262,7 +277,6 @@ export default function SearchPage() {
           </div>
         ) : rooms.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">
               Không tìm thấy kết quả
             </h3>
@@ -290,7 +304,7 @@ export default function SearchPage() {
 
             {/* Pagination */}
             {total > 12 && (
-              <div className="flex items-center justify-center gap-2 mt-12">
+              <div className="mb-50 flex items-center justify-center gap-2 mt-12">
                 <button
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
@@ -298,21 +312,20 @@ export default function SearchPage() {
                 >
                   Trước
                 </button>
-                
+
                 {[...Array(Math.ceil(total / 12))].map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setPage(i + 1)}
-                    className={`px-4 py-2 rounded-lg transition ${
-                      page === i + 1
-                        ? 'bg-blue-600 text-white'
-                        : 'border border-gray-300 hover:bg-gray-50'
-                    }`}
+                    className={`px-4 py-2 rounded-lg transition ${page === i + 1
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
                   >
                     {i + 1}
                   </button>
                 ))}
-                
+
                 <button
                   onClick={() => setPage(Math.min(Math.ceil(total / 12), page + 1))}
                   disabled={page === Math.ceil(total / 12)}

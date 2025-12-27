@@ -10,18 +10,15 @@ interface SearchResultCardProps {
   room: Room;
 }
 
-// Đường dẫn ảnh mặc định nếu phòng không có ảnh (bạn có thể thay bằng ảnh placeholder của dự án)
 const PLACEHOLDER_IMAGE = 'https://placehold.co/600x400?text=No+Image';
 function getRoomLabel(type: string) {
   return ROOM_TYPES[type as RoomType] || 'Khác';
 }
 
 export default function SearchResultCard({ room }: SearchResultCardProps) {
-  // ✅ Logic xử lý ảnh: Ưu tiên isThumbnail -> Ảnh đầu tiên -> Placeholder
   const thumbnailObj = room.images?.find((img) => img.isThumbnail) || room.images?.[0];
   const imageUrl = thumbnailObj?.url || PLACEHOLDER_IMAGE;
 
-  // State để xử lý khi ảnh đang load
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   const formatPrice = (price: number) => {
@@ -71,32 +68,6 @@ export default function SearchResultCard({ room }: SearchResultCardProps) {
           )}
 
         </div>
-
-        {/* Heart Button */}
-        <button
-          className="absolute top-3 right-3 w-9 h-9 bg-white/80 backdrop-blur-md hover:bg-white text-gray-600 hover:text-red-500 rounded-full flex items-center justify-center shadow-sm transition-all duration-200 active:scale-95 z-20"
-          onClick={(e) => {
-            e.preventDefault(); // Ngăn chặn nhảy trang khi bấm tim
-            e.stopPropagation();
-            // TODO: Add to wishlist logic here
-            console.log('Add to wishlist', room.id);
-          }}
-          title="Lưu tin"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
-          </svg>
-        </button>
       </div>
 
       {/* --- CONTENT SECTION --- */}

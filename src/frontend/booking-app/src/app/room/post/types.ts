@@ -16,6 +16,10 @@ export interface FormData {
     address: string;
     latitude: number;
     longitude: number;
+    // Store names for server submission
+    cityName: string;
+    districtName: string;
+    wardName: string;
 
     // 3. Specs
     area: number;
