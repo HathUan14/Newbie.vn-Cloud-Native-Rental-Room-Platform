@@ -145,6 +145,29 @@ export default function Navbar() {
                         Đặt phòng của tôi
                       </div>
                     </Link>
+
+                    <Link
+                      href="/watchlist"
+                      className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 21.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+                          />
+                        </svg>
+                        Yêu thích
+                      </div>
+                    </Link>
+
    
                     <hr className="my-2" />
                     <Link
