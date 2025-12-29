@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToMany,
 } from 'typeorm';
 import { Room } from '../room/entities/room.entity';
 
@@ -93,4 +94,7 @@ export class User {
 
   @OneToMany(() => Room, (room) => room.host)
   rooms: Room[];
+
+  @ManyToMany(() => Room, room => room.watchList)
+  savedRooms: Room[];
 }

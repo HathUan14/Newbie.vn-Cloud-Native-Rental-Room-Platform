@@ -206,6 +206,7 @@ export class RoomsService {
         'images',
         'roomAmenities',
         'roomAmenities.amenity',
+        'watchList',
       ],
     });
 
@@ -559,5 +560,64 @@ export class RoomsService {
       message: 'Xóa tin đăng thành công'
     };
   }
+  
+  // 2 hàm cho tính năng watchlist
+
+  async toggleSaveRoom(roomId: number, userId: number) {
+    const room = await this.roomsRepository.findOne({
+      where: { id: roomId },
+      relations: ['watchList'],
+    });
+    if (!room) throw new NotFoundException('Room not found');
+
+    const isSaved = room.watchList.some(user => user.id === userId);
+    if (isSaved) {
+      room.watchList = room.watchList.filter(user => user.id !== userId);
+    } else {
+      const user = await this.usersRepository.findOne({ where: { id: userId } });
+      if (user)
+        room.watchList.push(user);
+    }
+
+    await this.roomsRepository.save(room);
+    return { saved: !isSaved };
+  }
+  async getUserWatchlist(userId: number) {
+    const rooms = await this.roomsRepository
+      .createQueryBuilder('room')
+      .leftJoinAndSelect('room.roomAmenities', 'roomAmenity')
+      .leftJoinAndSelect('roomAmenity.amenity', 'amenity')
+      .leftJoinAndSelect('room.images', 'images')
+      .innerJoin('room.watchList', 'user')
+      .where('user.id = :userId', { userId })
+      .getMany();
+
+    return { // giống format của tính năn search
+      success: true,
+      data: rooms.map((room) => ({
+        id: room.id,
+        title: room.title,
+        description: room.description,
+        price: Number(room.pricePerMonth),
+        size: room.area,
+        location: `${room.ward}, ${room.district}, ${room.city}`,
+        address: room.address,
+        status: room.status,
+        roomType: room.roomType,
+        gender: room.gender,
+        amenities: room.roomAmenities?.map((ra) => ({
+          id: ra.amenity.id,
+          name: ra.amenity.name,
+        })) || [],
+        images: room.images?.map((img) => ({
+          id: img.id,
+          url: img.imageUrl,
+          isThumbnail: img.isThumbnail,
+        })) || [],
+        available: room.status === 'AVAILABLE',
+      })),
+    };
+  }
 
 }
+

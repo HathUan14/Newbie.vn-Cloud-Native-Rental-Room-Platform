@@ -107,7 +107,7 @@ export default function SearchPage() {
 
       const result = await response.json();
 
-      console.log('✅ API Response:', result);
+      // console.log('✅ API Response:', result);
 
       // ✅ Map API response to Room type
       if (result.success && result.data) {

@@ -81,6 +81,15 @@ export class RoomsController {
     return { success: true, data: room };
   }
 
+  // return watchlist
+  @Get('watchlist')
+  @UseGuards(JwtAuthGuard)
+  async getWishlist(@Req() req) {
+    const userId = req.user.id;
+    const rooms = await this.roomsService.getUserWatchlist(userId);
+    return rooms;
+  }
+
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const room = await this.roomsService.findOne(id);
@@ -131,6 +140,16 @@ export class RoomsController {
     @Req() req,
   ) {
     return this.roomsService.delete(id, req.user);
+  }
+
+  // toggle wishlist
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/toggle-save')
+  toggleSave(
+    @Param('id') id: number,
+    @Req() req
+  ) {
+    return this.roomsService.toggleSaveRoom(id, req.user.id);
   }
 
 }

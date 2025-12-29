@@ -96,6 +96,7 @@ function MapComponent({ lat, lng }: { lat: number; lng: number }) {
 
 // --- MAIN COMPONENT ---
 export default function RoomDetailPage() {
+  const { user } = useAuth(); // Để hiển thị wishlist
   const params = useParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -141,14 +142,55 @@ export default function RoomDetailPage() {
     );
   }
 
-  return <RoomDetailContent data={data} selectedImage={selectedImage} setSelectedImage={setSelectedImage} showAllImages={showAllImages} setShowAllImages={setShowAllImages} />;
+  return <RoomDetailContent 
+  data={data} 
+  currentUser={user}
+  selectedImage={selectedImage} 
+  setSelectedImage={setSelectedImage} 
+  showAllImages={showAllImages} 
+  setShowAllImages={setShowAllImages} />;
 }
 
-function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImages, setShowAllImages }: any) {
+function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage, showAllImages, setShowAllImages }: any) {
   const images = data.images || [];
   const amenities = data.roomAmenities || [];
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(false); // wishlist
+  const [isProcessing, setIsProcessing] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+
+  // lấy thông tin wishlist khi reload page 
+  useEffect(() => { 
+    if (data?.watchList && currentUser) { 
+      const saved = data.watchList.some( (u: any) => u.id === currentUser.id ); 
+      setIsSaved(saved); 
+    } 
+  }, [data, currentUser]);
+
+  // console.log('save', isSaved);
+  // console.log('watchlist', data.watchList[0].id);
+  // console.log('user', currentUser);
+  
+  const handleToggleSave = async () => {
+    if (isProcessing) return;
+    setIsSaved(!isSaved); // toggle lập tức
+    setIsProcessing(true); // chặn spam nút lưu tin
+    try {
+      const res = await fetch(
+        `http://localhost:3000/rooms/${data.id}/toggle-save`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
+
+      const dataToggle = await res.json();
+      setIsSaved(dataToggle.saved);
+    } catch (err) {
+      console.error('Toggle save failed', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <>
@@ -195,11 +237,14 @@ function RoomDetailContent({ data, selectedImage, setSelectedImage, showAllImage
                   <span>Chia sẻ</span>
                 </button>
                 <button
-                  onClick={() => setIsSaved(!isSaved)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition border ${isSaved
+                  onClick={handleToggleSave}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition border 
+                    ${isSaved
                     ? 'bg-red-50 border-red-200 text-red-600'
                     : 'border-gray-200 bg-white hover:bg-gray-100'
-                    }`}
+                    } 
+                    ${isProcessing ? 'opacity-60 cursor-not-allowed' : ''}`
+                  }
                 >
                   <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
                   <span>{isSaved ? 'Đã lưu' : 'Lưu tin'}</span>

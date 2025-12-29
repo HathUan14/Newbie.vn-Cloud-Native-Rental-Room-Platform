@@ -7,6 +7,8 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  ManyToMany,
+  JoinTable,
   Index,
 } from 'typeorm';
 import { User } from '../../users/user.entity';
@@ -190,4 +192,18 @@ export class Room {
 
   @OneToMany(() => RoomAmenity, (ra) => ra.room, { cascade: true })
   roomAmenities: RoomAmenity[];
+
+  @ManyToMany(() => User, user => user.savedRooms, { cascade: true })
+  @JoinTable({
+    name: 'room_wishlist',
+    joinColumn: {
+      name: 'room_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+  })
+  watchList: User[];
 }
