@@ -65,10 +65,10 @@ export default function WatchlistPage() {
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-2xl font-semibold text-gray-900">
-            Danh sách các phòng đang theo dõi
+            Yêu thích
           </h1>
           <p className="text-gray-600 mt-1">
-            Những phòng bạn đã lưu để xem lại sau
+            Những phòng/căn hộ bạn đã lưu để xem lại sau
           </p>
         </div>
       </div>
