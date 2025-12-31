@@ -18,6 +18,7 @@ import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payment/payment.module';
 import { Booking } from './booking/entities/booking.entity'
 import { DisputeModule } from './dispute/dispute.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -63,7 +64,8 @@ import { DisputeModule } from './dispute/dispute.module';
     PostsModule,
     BookingModule,
     PaymentModule,
-    DisputeModule
+    DisputeModule,
+    ReviewModule
   ],
 })
 export class AppModule { }

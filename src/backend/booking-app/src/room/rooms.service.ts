@@ -619,5 +619,8 @@ export class RoomsService {
     };
   }
 
-}
+  async incrementViews(id: number): Promise<void> {
+    await this.roomsRepository.increment({ id }, 'totalViews', 1);
+  }
 
+}

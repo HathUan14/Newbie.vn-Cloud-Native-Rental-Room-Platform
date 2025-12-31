@@ -47,7 +47,6 @@ async function importCSV(dataSource: DataSource, tableName: string, csvFilePath:
 }
 
 async function main() {
-  // Load environment variables
   const DATABASE_URL = process.env.DATABASE_URL;
   
   if (!DATABASE_URL) {
@@ -56,9 +55,8 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('📝 DATABASE_URL:', DATABASE_URL.replace(/:[^:@]+@/, ':****@')); // Ẩn password
+  console.log('📝 DATABASE_URL:', DATABASE_URL.replace(/:[^:@]+@/, ':****@'));
 
-  // Tạo kết nối database
   const dataSource = new DataSource({
     type: 'postgres',
     url: DATABASE_URL,
@@ -72,31 +70,12 @@ async function main() {
 
     const seedDir = __dirname;
 
-    // Import theo thứ tự phụ thuộc
-    console.log('📥 Bắt đầu import dữ liệu...\n');
+    console.log('📥 Bắt đầu import reviews.csv...\n');
 
-    // 1. Users (không phụ thuộc vào bảng nào)
-    await importCSV(dataSource, 'users', path.join(seedDir, 'users.csv'));
-
-    // 2. Amenities (không phụ thuộc vào bảng nào)
-    await importCSV(dataSource, 'amenities', path.join(seedDir, 'amenities.csv'));
-
-    // 3. Rooms (phụ thuộc vào Users)
-    await importCSV(dataSource, 'rooms', path.join(seedDir, 'rooms.csv'));
-
-    // 4. Room Images (phụ thuộc vào Rooms)
-    await importCSV(dataSource, 'room_images', path.join(seedDir, 'room_images.csv'));
-
-    // 5. Room Amenities (phụ thuộc vào Rooms và Amenities)
-    await importCSV(dataSource, 'room_amenities', path.join(seedDir, 'room_amenities.csv'));
-
-    // 6. Bookings (phụ thuộc vào Users và Rooms)
-    await importCSV(dataSource, 'bookings', path.join(seedDir, 'bookings.csv'));
-
-    //7. Reviews (phụ thuộc vào Users và Bookings)
+    // Import reviews.csv
     await importCSV(dataSource, 'reviews', path.join(seedDir, 'reviews.csv'));
-    
-    console.log('\n🎉 Hoàn thành import dữ liệu!');
+
+    console.log('\n🎉 Hoàn thành import reviews!');
 
   } catch (error) {
     console.error('❌ Lỗi:', error);

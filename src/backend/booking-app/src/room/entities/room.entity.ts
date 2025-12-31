@@ -159,6 +159,7 @@ export class Room {
   @Column({ name: 'curfew_time', type: 'varchar', length: 10, nullable: true })
   curfewTime: string | null; // Ví dụ: "23:30"
 
+
   // --- SYSTEM ---
   @Column({ type: 'enum', enum: RoomStatus, default: RoomStatus.AVAILABLE })
   status: RoomStatus;
@@ -181,6 +182,9 @@ export class Room {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({name: 'total_views', type: 'int', default: 0})
+  totalViews: number;   //Tổng số lượt xem phòng, mặc định bằng 0
 
   // --- RELATIONS ---
   @ManyToOne(() => User, (user) => user.rooms, { onDelete: 'CASCADE' })

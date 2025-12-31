@@ -93,6 +93,8 @@ export class RoomsController {
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const room = await this.roomsService.findOne(id);
+    // Tăng số lượt xem
+    await this.roomsService.incrementViews(id);
     return {
       success: true,
       data: room,
