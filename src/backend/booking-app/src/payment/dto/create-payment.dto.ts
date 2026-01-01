@@ -3,6 +3,10 @@ import { Type } from 'class-transformer';
 
 export class CreatePaymentDto {
   @IsNumber()
+  @Type(() => Number)
+  bookingId: number;
+
+  @IsNumber()
   @Min(1000, { message: 'Số tiền tối thiểu là 1,000 VNĐ' })
   @Type(() => Number) 
   amount: number;

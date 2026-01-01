@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 import { 
   Home, 
   MapPin, 
@@ -16,13 +17,14 @@ import {
   MessageSquare,
   Clock,
   Ban,
-  CheckCheck
+  CheckCheck,
+  AlertCircle
 } from 'lucide-react';
 
 // Types
 interface Booking {
   id: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'APPROVED' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED_BY_RENTER' | 'CANCELLED_BY_HOST';
   moveInDate: string;
   totalPrice: number;
   depositAmount: number;
@@ -57,19 +59,24 @@ const STATUS_CONFIG = {
     color: 'bg-green-100 text-green-700 border-green-300',
     icon: CheckCheck
   },
+  CONFIRMED: { 
+    label: 'Đã xác nhận', 
+    color: 'bg-blue-100 text-blue-700 border-blue-300',
+    icon: CheckCircle
+  },
   REJECTED: { 
     label: 'Đã từ chối', 
     color: 'bg-red-100 text-red-700 border-red-300',
     icon: Ban
   },
-  COMPLETED: { 
-    label: 'Hoàn thành', 
-    color: 'bg-blue-100 text-blue-700 border-blue-300',
-    icon: CheckCircle
-  },
-  CANCELLED: { 
-    label: 'Đã hủy', 
+  CANCELLED_BY_RENTER: { 
+    label: 'Khách hủy', 
     color: 'bg-gray-100 text-gray-700 border-gray-300',
+    icon: XCircle
+  },
+  CANCELLED_BY_HOST: { 
+    label: 'Chủ nhà hủy', 
+    color: 'bg-orange-100 text-orange-700 border-orange-300',
     icon: XCircle
   }
 };
@@ -90,11 +97,23 @@ export function BookingCard({
 }: { 
   booking: Booking; 
   onApprove: (id: number) => void;
-  onReject: (id: number) => void;
+  onReject: (id: number, reason: string) => void;
   isProcessing: boolean;
 }) {
-  const statusConfig = STATUS_CONFIG[booking.status];
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const statusConfig = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PENDING;
   const StatusIcon = statusConfig.icon;
+
+  const handleApprove = () => {
+    setShowApproveModal(false);
+    onApprove(booking.id);
+  };
+
+  const handleReject = (reason: string) => {
+    setShowRejectModal(false);
+    onReject(booking.id, reason);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition">
@@ -216,7 +235,7 @@ export function BookingCard({
           {booking.status === 'PENDING' && (
             <div className="flex gap-3">
               <button
-                onClick={() => onApprove(booking.id)}
+                onClick={() => setShowApproveModal(true)}
                 disabled={isProcessing}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-semibold rounded-lg transition"
               >
@@ -224,7 +243,7 @@ export function BookingCard({
                 {isProcessing ? 'Đang xử lý...' : 'Chấp nhận'}
               </button>
               <button
-                onClick={() => onReject(booking.id)}
+                onClick={() => setShowRejectModal(true)}
                 disabled={isProcessing}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 font-semibold rounded-lg transition"
               >
@@ -238,6 +257,94 @@ export function BookingCard({
           <p className="text-xs text-gray-500 mt-4 pt-4 border-t border-gray-100">
             Yêu cầu lúc: {format(new Date(booking.createdAt), "dd/MM/yyyy 'lúc' HH:mm", { locale: vi })}
           </p>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showApproveModal && (
+        <ApproveModal
+          booking={booking}
+          onClose={() => setShowApproveModal(false)}
+          onSubmit={handleApprove}
+          isProcessing={isProcessing}
+        />
+      )}
+      {showRejectModal && (
+        <RejectModal
+          onClose={() => setShowRejectModal(false)}
+          onSubmit={handleReject}
+          isProcessing={isProcessing}
+        />
+      )}
+    </div>
+  );
+}
+
+export function ApproveModal({ 
+  booking,
+  onClose, 
+  onSubmit, 
+  isProcessing 
+}: { 
+  booking: Booking;
+  onClose: () => void; 
+  onSubmit: () => void;
+  isProcessing: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Xác nhận chấp nhận</h3>
+              <p className="text-sm text-gray-600">Bạn chắc chắn muốn chấp nhận yêu cầu này?</p>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-4 mb-4 border border-blue-100">
+            <p className="text-sm text-gray-700 mb-2">
+              <span className="font-semibold">Phòng:</span> {booking.room.title}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+              <span className="font-semibold">Khách thuê:</span> {booking.renter.fullName || booking.renter.email}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+              <span className="font-semibold">Ngày dọn vào:</span> {format(new Date(booking.moveInDate), 'dd/MM/yyyy', { locale: vi })}
+            </p>
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold">Tiền cọc:</span> {formatCurrency(booking.depositAmount)}
+            </p>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="flex gap-2">
+              <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-yellow-800">
+                Sau khi chấp nhận, khách thuê sẽ nhận được email thông báo và sẽ thanh toán cọc trong vòng 24 giờ.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={isProcessing}
+              className="flex-1 px-4 py-2.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={onSubmit}
+              disabled={isProcessing}
+              className="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-semibold rounded-xl transition"
+            >
+              {isProcessing ? 'Đang xử lý...' : 'Xác nhận chấp nhận'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

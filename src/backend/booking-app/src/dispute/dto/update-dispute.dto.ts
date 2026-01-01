@@ -7,7 +7,7 @@ export class UpdateDisputeDto extends PartialType(CreateDisputeDto) {
     @IsOptional()
     @IsNotEmpty()
     @IsNumber()
-    bookingId: string;
+    bookingId: number;
 
     @IsNotEmpty()
     @IsString()

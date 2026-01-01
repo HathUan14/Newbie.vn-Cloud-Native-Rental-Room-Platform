@@ -31,10 +31,23 @@ export class BookingService {
     return await this.bookingRepo.save(booking);
   }
 
+async findOne(bookingId: number): Promise<Booking> {
+  const booking = await this.bookingRepo.findOne({
+    where: { id: bookingId },
+    relations: ['room', 'renter'],
+  });
+
+  if (!booking) {
+    throw new NotFoundException(`Booking ${bookingId} not found`);
+  }
+  return booking;
+}
+
+
   async getMyBookings(renterId: number): Promise<Booking[]> {
     return await this.bookingRepo.find({
       where: { renterId },
-      relations: ['room', 'room.images', 'renter'],
+      relations: ['room', 'room.images', 'renter', 'dispute'],
       order: { createdAt: 'DESC' }
     });
   }
@@ -45,6 +58,7 @@ export class BookingService {
       .leftJoinAndSelect('booking.room', 'room')
       .leftJoinAndSelect('room.images', 'images')
       .leftJoinAndSelect('booking.renter', 'renter')
+      .leftJoinAndSelect('booking.dispute', 'dispute')
       .where('room.hostId = :hostId', { hostId })
       .orderBy('booking.createdAt', 'DESC')
       .getMany();
@@ -69,6 +83,28 @@ export class BookingService {
       await this.mailerService.sendBookingResult(booking.renter, booking.room.title, 'APPROVED');
       return await manager.save(booking);
     });
+  }
+
+  async confirmBooking(bookingId: number): Promise<Booking> {
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+      relations: ['room', 'renter'],
+    });
+
+    if (!booking) throw new NotFoundException('Booking not found');
+
+    booking.status = BookingStatus.CONFIRMED;
+    const savedBooking = await this.bookingRepo.save(booking);
+
+    // Gửi email thông báo thanh toán thành công
+    await this.mailerService.sendPaymentSuccess(
+      booking.renter,
+      booking.room.title,
+      booking.depositAmount,
+      booking.moveInDate,
+    );
+
+    return savedBooking;
   }
 
   async reject(hostId: number, bookingId: number, reason: string): Promise<Booking> {

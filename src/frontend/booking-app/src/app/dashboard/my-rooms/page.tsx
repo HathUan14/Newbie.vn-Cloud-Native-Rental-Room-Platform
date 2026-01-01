@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { BookingCard, RejectModal } from '@/components/BookingCard';
+import { BookingCard } from '@/components/BookingCard';
 
 // Icons tối giản
 const Icons = {
@@ -36,7 +36,6 @@ export default function MyRoomsDashboard() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [roomToDelete, setRoomToDelete] = useState<{ id: number; title: string } | null>(null);
     const [processingBookingId, setProcessingBookingId] = useState<number | null>(null);
-    const [showRejectModal, setShowRejectModal] = useState<number | null>(null);
 
     const statusMsg = searchParams.get('status');
 
@@ -121,7 +120,6 @@ export default function MyRoomsDashboard() {
     };
 
     const handleApproveBooking = async (bookingId: number) => {
-        if (!confirm('Xác nhận chấp nhận yêu cầu này?')) return;
         setProcessingBookingId(bookingId);
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -133,7 +131,7 @@ export default function MyRoomsDashboard() {
             });
             const result = await res.json();
             if (result.success) {
-                toast.success('✅ Đã chấp nhận yêu cầu');
+                toast.success('Đã chấp nhận yêu cầu');
                 fetchBookings();
             } else {
                 toast.error(result.msg || 'Không thể xử lý');
@@ -161,8 +159,7 @@ export default function MyRoomsDashboard() {
             });
             const result = await res.json();
             if (result.success) {
-                toast.success('✅ Đã từ chối yêu cầu');
-                setShowRejectModal(null);
+                toast.success('Đã từ chối yêu cầu');
                 fetchBookings();
             } else {
                 toast.error(result.msg || 'Không thể xử lý');
@@ -199,14 +196,14 @@ export default function MyRoomsDashboard() {
                                     onClick={() => setActiveView('bookings')}
                                     icon={<Icons.UserRequest />}
                                     label="Yêu cầu thuê"
-                                    badge={bookings.filter(b => b.status === 'PENDING').length > 0 ? bookings.filter(b => b.status === 'PENDING').length.toString() : undefined}
+                                    
                                     active={activeView === 'bookings'}
                                 />
                                 <SidebarLink
                                     href="#"
                                     icon={<Icons.Mail />}
                                     label="Hộp thư"
-                                    badge="2"
+                                    
                                 />
                             </div>
                         </div>
@@ -313,7 +310,7 @@ export default function MyRoomsDashboard() {
                                         key={booking.id}
                                         booking={booking}
                                         onApprove={handleApproveBooking}
-                                        onReject={(id) => setShowRejectModal(id)}
+                                        onReject={(id, reason) => handleRejectBooking(id, reason)}
                                         isProcessing={processingBookingId === booking.id}
                                     />
                                 ))}
@@ -330,15 +327,6 @@ export default function MyRoomsDashboard() {
                     onConfirm={confirmDelete}
                     onCancel={cancelDelete}
                     isDeleting={deletingId === roomToDelete.id}
-                />
-            )}
-
-            {/* Reject Booking Modal */}
-            {showRejectModal && (
-                <RejectModal
-                    onClose={() => setShowRejectModal(null)}
-                    onSubmit={(reason) => handleRejectBooking(showRejectModal, reason)}
-                    isProcessing={processingBookingId === showRejectModal}
                 />
             )}
         </div>

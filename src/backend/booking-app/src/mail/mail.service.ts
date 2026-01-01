@@ -97,6 +97,29 @@ export class MailService {
     });
   }
 
+  /**
+   * Gửi email thông báo thanh toán cọc thành công
+   */
+  async sendPaymentSuccess(
+    user: User,
+    roomTitle: string,
+    amount: number,
+    moveInDate: Date,
+  ) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: '✅ Thanh toán cọc thành công - Xác nhận đặt phòng',
+      template: './payment-success',
+      context: {
+        name: user.fullName,
+        roomTitle: roomTitle,
+        amount: amount,
+        moveInDate: moveInDate,
+        actionUrl: 'http://localhost:3001/dashboard/bookings',
+      },
+    });
+  }
+
   async sendRefundResult(
     user: User,
     transactionId: string,
@@ -123,6 +146,66 @@ export class MailService {
         transactionId: transactionId,
         amount: amount,
         reason: reason,
+      },
+    });
+  }
+
+  /**
+   * Gửi email thông báo kết quả dispute cho renter
+   */
+  async sendDisputeResult(
+    user: User,
+    roomTitle: string,
+    status: 'APPROVED' | 'DENIED',
+    refundAmount: number,
+    reason: string = '',
+  ) {
+    const isApproved = status === 'APPROVED';
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: isApproved
+        ? 'Khiếu nại của bạn đã được chấp nhận!'
+        : 'Khiếu nại của bạn bị từ chối',
+      template: isApproved ? './dispute-approved' : './dispute-denied',
+      context: {
+        name: user.fullName,
+        roomTitle: roomTitle,
+        refundAmount: refundAmount,
+        reason: reason,
+        actionUrl: 'http://localhost:3001/dashboard/bookings',
+      },
+    });
+  }
+
+  /**
+   * Gửi email thông báo kết quả dispute cho host
+   */
+  async sendDisputeResultHost(
+    host: User,
+    roomTitle: string,
+    renterName: string,
+    status: 'APPROVED' | 'DENIED',
+    refundAmount: number,
+    reason: string = '',
+  ) {
+    const isApproved = status === 'APPROVED';
+
+    await this.mailerService.sendMail({
+      to: host.email,
+      subject: isApproved
+        ? `Khiếu nại từ ${renterName} đã được chấp nhận`
+        : `Khiếu nại từ ${renterName} đã bị từ chối`,
+      template: isApproved
+        ? './dispute-host-refunded'
+        : './dispute-host-denied',
+      context: {
+        name: host.fullName,
+        roomTitle: roomTitle,
+        renterName: renterName,
+        refundAmount: refundAmount,
+        reason: reason,
+        actionUrl: 'http://localhost:3001/dashboard/host-bookings',
       },
     });
   }

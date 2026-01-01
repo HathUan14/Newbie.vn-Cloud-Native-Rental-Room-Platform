@@ -28,6 +28,9 @@ export class Dispute {
     @Column({ type: 'text' })
     reason: string;
 
+    @Column({ type: 'jsonb', nullable: true, name: 'evidence_images' })
+    evidenceImages: string[] | null;
+
     @Column({ type: 'text', nullable: true, name: 'admin_decision_note' })
     adminDecisionNote: string | null;
 

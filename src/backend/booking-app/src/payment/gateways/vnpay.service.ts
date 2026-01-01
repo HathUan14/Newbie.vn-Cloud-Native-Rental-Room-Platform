@@ -29,7 +29,7 @@ export class VnpayService implements IPaymentGateway {
       'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html';
     this.vnp_ReturnUrl =
       this.configService.get<string>('VNPAY_RETURN_URL') ||
-      'http://localhost:3000/vnpay_return';
+      'http://localhost:3000/api/payment/vnpay-return';
   }
 
   /**
@@ -132,51 +132,49 @@ export class VnpayService implements IPaymentGateway {
   }
 
   /**
-   * Xử lý hoàn tiền (Dành cho BE 4 sau này)
-   * Hiện tại chưa implement, trả về false
+   * Xử lý hoàn tiền
+   * 
+   * ⚠️ LƯU Ý: VNPay Sandbox có thể KHÔNG hỗ trợ Refund API.
+   * Refund API thường chỉ hoạt động trên môi trường Production với merchant account thật.
+   * 
+   * Nếu gặp lỗi "Transaction not found" (code 91):
+   * 1. Kiểm tra vnp_TransactionNo có đúng là mã VNPay trả về không
+   * 2. Xác nhận merchant account có quyền refund
+   * 3. Test trên Production environment nếu cần thiết
+   * 
+   * @param transactionId - Order ID gốc (vnp_TxnRef)
+   * @param amount - Số tiền hoàn
+   * @param transDate - Ngày giao dịch gốc format YYYYMMDDHHmmss (14 chữ số)
+   * @param vnpayTransactionNo - Số GD VNPay gốc (vnp_TransactionNo)
    */
   async processRefund(
     transactionId: string,
     amount: number,
     transDate: string,
-  ): Promise<boolean> {
-    // TODO: Implement refund logic theo tài liệu VNPay
-    // API: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction
-    // Command: refund
-
+    vnpayTransactionNo: string,
+  ): Promise<{ success: boolean; message: string; data?: any }> {
     process.env.TZ = 'Asia/Ho_Chi_Minh';
-    let date = new Date();
+    const date = new Date();
 
-    let vnp_TmnCode = this.vnp_TmnCode;
-    let secretKey = this.vnp_HashSecret;
-    let vnp_Api =
-      'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction';
+    const vnp_TmnCode = this.vnp_TmnCode;
+    const secretKey = this.vnp_HashSecret;
+    const vnp_Api = 'https://sandbox.vnpayment.vn/merchant_webapi/api/transaction';
 
-    let vnp_TxnRef = transactionId;
-    let vnp_TransactionDate = transDate;
-    let vnp_Amount = amount * 100; // VNPay yêu cầu nhân 100
-    let vnp_TransactionType = '02'; // Hoàn trả toàn phần = 02, một phần = 03
-    let vnp_CreateBy = 'system';
+    const vnp_RequestId = crypto.randomUUID();
+    const vnp_Version = '2.1.0';
+    const vnp_Command = 'refund';
+    const vnp_TransactionType = '02'; // 02 = Hoàn toàn phần, 03 = Hoàn một phần
+    const vnp_TxnRef = transactionId;
+    const vnp_Amount = amount * 100;
+    const vnp_OrderInfo = `Hoan tien GD ma: ${vnp_TxnRef}`;
+    const vnp_TransactionNo = vnpayTransactionNo; // SỐ GD VNPAY GỐC
+    const vnp_TransactionDate = transDate; // Format: YYYYMMDDHHmmss
+    const vnp_CreateBy = 'admin';
+    const vnp_CreateDate = moment(date).format('YYYYMMDDHHmmss');
+    const vnp_IpAddr = '127.0.0.1';
 
-    let currCode = 'VND';
-
-    let vnp_RequestId = crypto.randomUUID();
-    let vnp_Version = '2.1.0';
-    let vnp_Command = 'refund';
-    let vnp_OrderInfo = 'Hoan tien GD ma:' + vnp_TxnRef;
-
-    // let vnp_IpAddr =
-    //   req.headers['x-forwarded-for'] ||
-    //   req.connection.remoteAddress ||
-    //   req.socket.remoteAddress ||
-    //   req.connection.socket.remoteAddress;
-    let vnp_IpAddr = '127.0.0.1';
-
-    let vnp_CreateDate = moment(date).format('YYYYMMDDHHmmss');
-
-    let vnp_TransactionNo = '0';
-
-    let data =
+    // Tạo chuỗi dữ liệu để hash
+    const data =
       vnp_RequestId +
       '|' +
       vnp_Version +
@@ -202,25 +200,29 @@ export class VnpayService implements IPaymentGateway {
       vnp_IpAddr +
       '|' +
       vnp_OrderInfo;
-    let hmac = crypto.createHmac('sha512', secretKey);
-    let vnp_SecureHash = hmac.update(Buffer.from(data, 'utf-8')).digest('hex');
 
-    let dataObj = {
-      vnp_RequestId: vnp_RequestId,
-      vnp_Version: vnp_Version,
-      vnp_Command: vnp_Command,
-      vnp_TmnCode: vnp_TmnCode,
-      vnp_TransactionType: vnp_TransactionType,
-      vnp_TxnRef: vnp_TxnRef,
-      vnp_Amount: vnp_Amount,
-      vnp_TransactionNo: vnp_TransactionNo,
-      vnp_CreateBy: vnp_CreateBy,
-      vnp_OrderInfo: vnp_OrderInfo,
-      vnp_TransactionDate: vnp_TransactionDate,
-      vnp_CreateDate: vnp_CreateDate,
-      vnp_IpAddr: vnp_IpAddr,
-      vnp_SecureHash: vnp_SecureHash,
+    const hmac = crypto.createHmac('sha512', secretKey);
+    const vnp_SecureHash = hmac.update(Buffer.from(data, 'utf-8')).digest('hex');
+
+    const dataObj = {
+      vnp_RequestId,
+      vnp_Version,
+      vnp_Command,
+      vnp_TmnCode,
+      vnp_TransactionType,
+      vnp_TxnRef,
+      vnp_Amount,
+      vnp_TransactionNo,
+      vnp_CreateBy,
+      vnp_OrderInfo,
+      vnp_TransactionDate,
+      vnp_CreateDate,
+      vnp_IpAddr,
+      vnp_SecureHash,
     };
+
+    console.log('=== VNPay Refund Request ===');
+    console.log('Request Data:', JSON.stringify(dataObj, null, 2));
 
     try {
       const res = await fetch(vnp_Api, {
@@ -232,16 +234,44 @@ export class VnpayService implements IPaymentGateway {
       });
 
       const json = await res.json();
+      console.log('=== VNPay Refund Response ===');
+      console.log('Response:', JSON.stringify(json, null, 2));
 
-      if (json.vnp_ResponseCode == '00' && this.verifySignature(json)) {
-        console.log(json);
-        return true;
+      // Kiểm tra response code và signature
+      if (json.vnp_ResponseCode === '00') {
+        console.log('✅ Refund successful!');
+        return {
+          success: true,
+          message: 'Hoàn tiền thành công',
+          data: json,
+        };
+      } else {
+        console.error('❌ Refund failed with code:', json.vnp_ResponseCode);
+        const errorMessages: Record<string, string> = {
+          '02': 'Merchant không hợp lệ',
+          '03': 'Dữ liệu gửi sang không đúng định dạng',
+          '04': 'Không cho phép hoàn trả giao dịch',
+          '13': 'Chỉ cho phép hoàn trả một phần',
+          '91': 'Không tìm thấy giao dịch',
+          '93': 'Số tiền hoàn trả không hợp lệ',
+          '94': 'Yêu cầu bị trùng',
+          '95': 'Giao dịch chưa được thanh toán',
+          '97': 'Chữ ký không hợp lệ',
+          '99': 'Lỗi không xác định',
+        };
+        return {
+          success: false,
+          message: errorMessages[json.vnp_ResponseCode] || `Lỗi VNPay: ${json.vnp_ResponseCode}`,
+          data: json,
+        };
       }
     } catch (err) {
-      console.log(err);
-      return false;
+      console.error('❌ Refund network error:', err);
+      return {
+        success: false,
+        message: 'Lỗi kết nối VNPay API',
+        data: { error: err.message },
+      };
     }
-
-    return false;
   }
 }

@@ -13,6 +13,7 @@ export interface User {
   avatarUrl?: string | null;
   isHost: boolean;
   isActive: boolean; 
+  isAdmin: boolean;
   authProvider?: string;
   googleId?: string | null;
   createdAt?: string;

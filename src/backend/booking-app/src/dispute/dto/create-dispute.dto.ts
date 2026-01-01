@@ -4,15 +4,18 @@ import {
     isNumber,
     IsNumber,
     IsString,
-    Min,
+    MinLength,
 } from 'class-validator'
+import { Type } from 'class-transformer';
+
 export class CreateDisputeDto {
     @IsNotEmpty()
+    @Type(() => Number)
     @IsNumber()
-    bookingId: string;
+    bookingId: number; 
 
     @IsNotEmpty()
     @IsString()
-    @Min(3)
+    @MinLength(3) 
     reason: string;
 }

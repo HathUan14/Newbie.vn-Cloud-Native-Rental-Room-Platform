@@ -21,5 +21,10 @@ export interface IPaymentGateway {
   /**
    * Xử lý hoàn tiền (Dành cho BE 4 sau này)
    */
-  processRefund(transactionId: string, amount: number, transDate: string): Promise<boolean>;
+  processRefund(
+    transactionId: string,
+    amount: number,
+    transDate: string,
+    vnpayTransactionNo: string,
+  ): Promise<{ success: boolean; message: string; data?: any }>;
 }

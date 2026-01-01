@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import toast from 'react-hot-toast';
 import { 
   Calendar, 
   MapPin, 
@@ -103,7 +104,6 @@ export default function HostBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const [showRejectModal, setShowRejectModal] = useState<number | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -139,8 +139,6 @@ export default function HostBookingsPage() {
   };
 
   const handleApprove = async (bookingId: number) => {
-    if (!confirm('Xác nhận chấp nhận yêu cầu này?')) return;
-
     setProcessingId(bookingId);
     try {
       const response = await fetch(`${API_URL}/booking/host-process/${bookingId}`, {
@@ -154,13 +152,13 @@ export default function HostBookingsPage() {
 
       const result = await response.json();
       if (result.success) {
-        alert('✅ Đã chấp nhận yêu cầu');
+        toast.success('✅ Đã chấp nhận yêu cầu thành công!');
         fetchBookings();
       } else {
-        alert('❌ ' + (result.msg || 'Không thể xử lý'));
+        toast.error('❌ ' + (result.msg || 'Không thể xử lý'));
       }
     } catch (err) {
-      alert('❌ Lỗi kết nối');
+      toast.error('❌ Lỗi kết nối máy chủ');
     } finally {
       setProcessingId(null);
     }
@@ -168,7 +166,7 @@ export default function HostBookingsPage() {
 
   const handleReject = async (bookingId: number, reason: string) => {
     if (!reason.trim()) {
-      alert('Vui lòng nhập lý do từ chối');
+      toast.error('Vui lòng nhập lý do từ chối');
       return;
     }
 
@@ -188,14 +186,14 @@ export default function HostBookingsPage() {
 
       const result = await response.json();
       if (result.success) {
-        alert('✅ Đã từ chối yêu cầu');
+        toast.success('✅ Đã từ chối yêu cầu');
         setShowRejectModal(null);
         fetchBookings();
       } else {
-        alert('❌ ' + (result.msg || 'Không thể xử lý'));
+        toast.error('❌ ' + (result.msg || 'Không thể xử lý'));
       }
     } catch (err) {
-      alert('❌ Lỗi kết nối');
+      toast.error('❌ Lỗi kết nối máy chủ');
     } finally {
       setProcessingId(null);
     }
@@ -331,22 +329,13 @@ export default function HostBookingsPage() {
                 key={booking.id}
                 booking={booking}
                 onApprove={handleApprove}
-                onReject={(id) => setShowRejectModal(id)}
+                onReject={(id, reason) => handleReject(id, reason)}
                 isProcessing={processingId === booking.id}
               />
             ))}
           </div>
         )}
       </div>
-
-      {/* Reject Modal */}
-      {showRejectModal && (
-        <RejectModal
-          onClose={() => setShowRejectModal(null)}
-          onSubmit={(reason) => handleReject(showRejectModal, reason)}
-          isProcessing={processingId === showRejectModal}
-        />
-      )}
     </div>
   );
 }

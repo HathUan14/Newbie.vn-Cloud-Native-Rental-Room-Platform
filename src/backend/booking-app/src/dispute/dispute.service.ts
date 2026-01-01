@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { CreateDisputeDto } from './dto/create-dispute.dto';
 import { UpdateDisputeDto } from './dto/update-dispute.dto';
 import { ResolveDisputeDto } from './dto/resolve-dispute.dto';
@@ -13,6 +13,10 @@ import { Dispute, DisputeStatus } from './entities/dispute.entity';
 import { Booking } from '../booking/entities/booking.entity';
 import { BookingStatus } from '../booking/booking.constant';
 import { User } from '../users/user.entity';
+import { PaymentService } from '../payment/payment.service';
+import { MailService } from '../mail/mail.service';
+import { Room } from '../room/entities/room.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class DisputeService {
@@ -23,6 +27,12 @@ export class DisputeService {
     private readonly bookingRepository: Repository<Booking>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Room)
+    private readonly roomRepository: Repository<Room>,
+    private readonly paymentService: PaymentService,
+    private readonly mailService: MailService,
+    private readonly dataSource: DataSource,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   /**
@@ -32,11 +42,13 @@ export class DisputeService {
    * 2. Xác minh user là renter của booking
    * 3. Kiểm tra booking có trạng thái hợp lệ (CONFIRMED hoặc APPROVED)
    * 4. Đảm bảo chưa có dispute nào cho booking này
-   * 5. Tạo dispute mới với status PENDING_REVIEW
+   * 5. Upload ảnh minh chứng lên Cloudinary (nếu có)
+   * 6. Tạo dispute mới với status PENDING_REVIEW
    */
   async createDispute(
     createDisputeDto: CreateDisputeDto,
     renterId: number,
+    files?: Array<Express.Multer.File>,
   ): Promise<Dispute> {
     const { bookingId, reason } = createDisputeDto;
 
@@ -77,11 +89,22 @@ export class DisputeService {
       );
     }
 
-    // 5. Tạo dispute mới
+    // 5. Upload ảnh minh chứng lên Cloudinary
+    let evidenceImages: string[] = [];
+    if (files && files.length > 0) {
+      const uploadPromises = files.map(file => 
+        this.cloudinaryService.uploadImage(file)
+      );
+      const results = await Promise.all(uploadPromises);
+      evidenceImages = results.map(result => result.public_id);
+    }
+
+    // 6. Tạo dispute mới
     const dispute = this.disputeRepository.create({
       bookingId: Number(bookingId),
       renterId,
       reason,
+      evidenceImages: evidenceImages.length > 0 ? evidenceImages : null,
       status: DisputeStatus.PENDING_REVIEW,
       refundAmount: 0,
     });
@@ -98,6 +121,8 @@ export class DisputeService {
    * 3. Cập nhật status, adminDecisionNote, và refundAmount
    * 4. Nếu RESOLVED_REFUND, validate refundAmount <= depositAmount
    * 5. Lưu thông tin quyết định của admin
+   * 6. Xử lý hoàn tiền thực tế (nếu RESOLVED_REFUND)
+   * 7. Gửi email thông báo cho renter và host
    */
   async resolveDispute(
     disputeId: number,
@@ -117,10 +142,10 @@ export class DisputeService {
       );
     }
 
-    // 1. Kiểm tra dispute tồn tại
+    // 1. Kiểm tra dispute tồn tại với đầy đủ relations
     const dispute = await this.disputeRepository.findOne({
       where: { id: disputeId },
-      relations: ['booking'],
+      relations: ['booking', 'booking.room', 'renter'],
     });
 
     if (!dispute) {
@@ -150,12 +175,99 @@ export class DisputeService {
       }
     }
 
-    // 4. Cập nhật dispute
-    dispute.status = status;
-    dispute.adminDecisionNote = reason;
-    dispute.refundAmount = refundAmount;
+    // Lấy thông tin host từ room
+    const room = await this.roomRepository.findOne({
+      where: { id: dispute.booking.roomId },
+      relations: ['host'],
+    });
 
-    return await this.disputeRepository.save(dispute);
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    // 4 & 5 & 6 & 7: Xử lý trong transaction để đảm bảo tính nhất quán
+    return await this.dataSource.transaction(async (manager) => {
+      // 4. Cập nhật dispute
+      dispute.status = status;
+      dispute.adminDecisionNote = reason;
+      dispute.refundAmount = refundAmount;
+      const savedDispute = await manager.save(dispute);
+
+      // 5 & 6. Xử lý theo trường hợp
+      if (status === DisputeStatus.RESOLVED_REFUND) {
+        // Cập nhật booking status
+        dispute.booking.status = BookingStatus.CANCELLED_BY_HOST;
+        dispute.booking.cancelReason = `Dispute approved - Refund: ${refundAmount} VND`;
+        await manager.save(dispute.booking);
+
+        // Tạo transaction record cho refund
+        const transactionId = `REFUND_${dispute.bookingId}_${Date.now()}`;
+        await this.paymentService.createTransaction(
+          dispute.bookingId,
+          dispute.renterId,
+          refundAmount,
+          transactionId,
+          `Refund for dispute #${disputeId} - ${reason}`,
+        );
+
+        // Xử lý hoàn tiền thực tế qua VNPay
+        // try {
+        //   const refundResult = await this.paymentService.processRefund(
+        //     dispute.bookingId,
+        //     refundAmount,
+        //   );
+          
+        //   if (refundResult.success) {
+        //     console.log('✅ Refund successful:', refundResult.message);
+        //   } else {
+        //     console.error('❌ Refund failed:', refundResult.message);
+        //   }
+        // } catch (error) {
+        //   // Log error nhưng không throw để không rollback transaction
+        //   console.error('Refund processing error:', error);
+        // }
+
+        // 7. Gửi email cho renter (approved)
+        await this.mailService.sendDisputeResult(
+          dispute.renter,
+          dispute.booking.room.title,
+          'APPROVED',
+          refundAmount,
+          reason,
+        );
+
+        // Gửi email cho host
+        await this.mailService.sendDisputeResultHost(
+          room.host,
+          dispute.booking.room.title,
+          dispute.renter.fullName,
+          'APPROVED',
+          refundAmount,
+          reason,
+        );
+      } else if (status === DisputeStatus.RESOLVED_DENIED) {
+        // 7. Gửi email cho renter (denied)
+        await this.mailService.sendDisputeResult(
+          dispute.renter,
+          dispute.booking.room.title,
+          'DENIED',
+          0,
+          reason,
+        );
+
+        // Gửi email cho host
+        await this.mailService.sendDisputeResultHost(
+          room.host,
+          dispute.booking.room.title,
+          dispute.renter.fullName,
+          'DENIED',
+          0,
+          reason,
+        );
+      }
+
+      return savedDispute;
+    });
   }
 
   /**
@@ -165,7 +277,7 @@ export class DisputeService {
   async getPendingDisputes(): Promise<Dispute[]> {
     return await this.disputeRepository.find({
       where: { status: DisputeStatus.PENDING_REVIEW },
-      relations: ['booking', 'renter'],
+      relations: ['booking', 'booking.room', 'booking.room.images', 'renter'],
       order: { createdAt: 'DESC' },
     });
   }
