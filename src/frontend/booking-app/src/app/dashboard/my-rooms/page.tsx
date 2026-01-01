@@ -449,7 +449,7 @@ function SimpleRoomCard({ room, onDelete, deleting }: {
             {/* Image Section */}
             <div className="relative h-56 overflow-hidden">
                 <Image
-                    src={room.images?.[0]?.imageUrl || 'https://placehold.co/600x400'}
+                    src={room.images?.[0]?.imageUrl || '/placeholder-room.jpg'}
                     alt={room.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"

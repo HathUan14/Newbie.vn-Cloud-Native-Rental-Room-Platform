@@ -23,6 +23,7 @@ export default function CreatePostPage() {
     const [formData, setFormData] = useState<FormData>({
         title: '', description: '', roomType: '',
         province: '', district: '', ward: '', address: '', latitude: 10.8231, longitude: 106.6297,
+        cityName: '', districtName: '', wardName: '',
         area: 20, guestCapacity: 1,
         pricePerMonth: 0, deposit: 0, minLeaseTerm: 6,
         electricityPrice: 3500, electricityUnit: 'KWH',
@@ -113,9 +114,9 @@ export default function CreatePostPage() {
         payload.append('roomType', data.roomType);
 
         // Location
-        payload.append('province', data.province);
-        payload.append('district', data.district);
-        payload.append('ward', data.ward);
+        payload.append('province', data.cityName);
+        payload.append('district', data.districtName);
+        payload.append('ward', data.wardName);
         payload.append('address', data.address);
         payload.append('latitude', data.latitude.toString());
         payload.append('longitude', data.longitude.toString());
