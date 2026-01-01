@@ -7,19 +7,23 @@ interface Step5Props {
     removeImage: (index: number) => void;
     handleInputChange: (field: keyof FormData, value: any) => void;
     imagePreviews: string[];
+    errors?: Record<string, string>;
 }
 
-const Step5_Images: React.FC<Step5Props> = ({ formData, handleImageUpload, removeImage, handleInputChange, imagePreviews }) => {
+const Step5_Images: React.FC<Step5Props> = ({ formData, handleImageUpload, removeImage, handleInputChange, imagePreviews, errors }) => {
+    const imageCount = formData.images.length;
+    const hasError = errors?.images;
+    
     return (
         <div className="animate-fadeIn space-y-6">
-            <div className="flex flex-col items-center justify-center space-y-4 border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:bg-gray-50 transition-colors cursor-pointer relative">
-                <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+            <div className={`flex flex-col items-center justify-center space-y-4 border-2 border-dashed rounded-2xl p-10 text-center hover:bg-gray-50 transition-colors cursor-pointer relative ${hasError ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}>
+                <input type="file" multiple accept="image/jpeg,image/jpg,image/png" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    className="w-16 h-16"
+                    className={`w-16 h-16 ${hasError ? 'text-red-500' : ''}`}
                 >
                     <path
                         strokeLinecap="round"
@@ -31,8 +35,21 @@ const Step5_Images: React.FC<Step5Props> = ({ formData, handleImageUpload, remov
                 </svg>
 
                 <p className="font-medium text-gray-900">Kéo thả ảnh vào đây hoặc click để tải lên</p>
-                <p className="text-sm text-gray-500 mt-1">Hỗ trợ JPG, PNG. Tối thiểu 4 ảnh để hiển thị tốt nhất.</p>
+                <p className="text-sm text-gray-500 mt-1">
+                    <strong>Chỉ chấp nhận JPG, PNG.</strong> Tối thiểu 4 ảnh.
+                </p>
+                {imageCount > 0 && (
+                    <p className={`text-sm font-semibold ${imageCount >= 4 ? 'text-green-600' : 'text-orange-600'}`}>
+                        Đã tải: {imageCount}/4 ảnh {imageCount >= 4 ? '✓' : '(cần thêm ' + (4 - imageCount) + ' ảnh)'}
+                    </p>
+                )}
             </div>
+
+            {hasError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <p className="font-medium">⚠️ {errors.images}</p>
+                </div>
+            )}
 
             {formData.images.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

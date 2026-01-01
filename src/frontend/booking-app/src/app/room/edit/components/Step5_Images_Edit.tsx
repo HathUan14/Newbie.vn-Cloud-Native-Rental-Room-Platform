@@ -17,6 +17,7 @@ interface Step5Props {
     onRemoveNew: (index: number) => void;
     onSetExistingCover: (imageId: number) => void;
     onSetNewCover: (index: number) => void;
+    errors?: Record<string, string>;
 }
 
 const Step5_Images_Edit: React.FC<Step5Props> = ({
@@ -29,17 +30,20 @@ const Step5_Images_Edit: React.FC<Step5Props> = ({
     onRemoveNew,
     onSetExistingCover,
     onSetNewCover,
+    errors,
 }) => {
     const totalImages = existingImages.length + newImagePreviews.length;
     const hasImages = totalImages > 0;
+    const hasError = errors?.images;
 
     return (
         <div className="space-y-6 animate-fadeIn">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                <ImageIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-900">
+            <div className={`border rounded-xl p-4 flex items-start gap-3 ${hasError ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+                <ImageIcon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${hasError ? 'text-red-600' : 'text-blue-600'}`} />
+                <div className={`text-sm ${hasError ? 'text-red-900' : 'text-blue-900'}`}>
                     <p className="font-semibold mb-1">Quản lý hình ảnh</p>
-                    <ul className="space-y-1 text-blue-700">
+                    <ul className={`space-y-1 ${hasError ? 'text-red-700' : 'text-blue-700'}`}>
+                        <li><strong>• Chỉ chấp nhận JPG, PNG. Tối thiểu 4 ảnh.</strong></li>
                         <li>• Xóa ảnh cũ bằng cách click nút X</li>
                         <li>• Thêm ảnh mới từ máy tính</li>
                         <li>• Click biểu tượng ⭐ để chọn ảnh đại diện</li>
@@ -47,6 +51,12 @@ const Step5_Images_Edit: React.FC<Step5Props> = ({
                     </ul>
                 </div>
             </div>
+
+            {hasError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <p className="font-medium">⚠️ {errors.images}</p>
+                </div>
+            )}
 
             {/* Stats */}
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
@@ -61,7 +71,9 @@ const Step5_Images_Edit: React.FC<Step5Props> = ({
                     </div>
                     <div>
                         <p className="text-xs text-slate-500 mb-1">Tổng cộng</p>
-                        <p className="text-lg font-bold text-slate-900">{totalImages} / 10</p>
+                        <p className={`text-lg font-bold ${totalImages >= 4 ? 'text-green-600' : 'text-orange-600'}`}>
+                            {totalImages} / 10 {totalImages >= 4 ? '✓' : '(cần ' + (4 - totalImages) + ' ảnh)'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -192,7 +204,7 @@ const Step5_Images_Edit: React.FC<Step5Props> = ({
                     <input
                         type="file"
                         multiple
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png"
                         onChange={onNewImageUpload}
                         className="hidden"
                         disabled={totalImages >= 10}

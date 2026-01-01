@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, IsBoolean, IsArray, ArrayMinSize, ValidateIf } from 'class-validator';
 import { RoomTypeEnum } from '../../room/entities/room.entity';
 import { Type } from 'class-transformer';
 
@@ -95,6 +95,10 @@ export class UpdateRoomDto {
   petAllowed?: boolean;
 
   @IsOptional()
+  @ValidateIf(o => o.imageUrls !== undefined)
+  @IsArray()
+  @ArrayMinSize(4, { message: 'Phải tải lên ít nhất 4 ảnh' })
+  @IsString({ each: true })
   imageUrls?: string[];
 
   @IsOptional()

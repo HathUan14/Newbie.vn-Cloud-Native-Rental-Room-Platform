@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString, IsBoolean, IsArray, ArrayMinSize } from 'class-validator';
 import { ModerationStatus, RoomTypeEnum } from '../../room/entities/room.entity';
 import { Type } from 'class-transformer';
 
@@ -91,8 +91,11 @@ export class CreateRoomDto {
   @IsEnum(ModerationStatus)
   moderationStatus?: ModerationStatus; // DRAFT hoặc PENDING
 
-  @IsOptional()
-  imageUrls?: string[];
+  @IsArray()
+  //Tải lên ít nhất 4 ảnh
+  @ArrayMinSize(4, { message: 'Phải tải lên ít nhất 4 ảnh' })
+  @IsString({ each: true })
+  imageUrls: string[];
 
   @IsOptional()
   amenityIds?: number[];

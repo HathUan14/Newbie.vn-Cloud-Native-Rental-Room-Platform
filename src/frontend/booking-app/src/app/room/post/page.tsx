@@ -73,9 +73,28 @@ export default function CreatePostPage() {
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
+        
+        // Validate file formats
+        const allowedFormats = ['jpg', 'jpeg', 'png'];
+        const invalidFiles = files.filter(file => {
+            const extension = file.name.split('.').pop()?.toLowerCase();
+            return !extension || !allowedFormats.includes(extension);
+        });
+
+        if (invalidFiles.length > 0) {
+            toast.error('Ch\u1ec9 ch\u1ea5p nh\u1eadn \u1ea3nh \u0111\u1ecbnh d\u1ea1ng JPG, JPEG ho\u1eb7c PNG');
+            e.target.value = ''; // Reset input
+            return;
+        }
+
         const newPreviews = files.map(file => URL.createObjectURL(file));
         setImagePreviews(prev => [...prev, ...newPreviews]);
         setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+        
+        // Clear error if exists
+        if (errors.images) {
+            setErrors(prev => ({ ...prev, images: '' }));
+        }
     };
 
     const removeImage = (index: number) => {
@@ -171,6 +190,13 @@ export default function CreatePostPage() {
 
     const handleSubmit = async () => {
         try {
+            // Validate images before submitting
+            if (formData.images.length < 4) {
+                toast.error('Ph\u1ea3i t\u1ea3i l\u00ean \u00edt nh\u1ea5t 4 \u1ea3nh');
+                setCurrentStep(5); // Go to images step
+                return;
+            }
+
             setIsSubmitting(true);
             const payload = buildFormData(formData, false); // isDraft = false
 
@@ -251,7 +277,7 @@ export default function CreatePostPage() {
             case 4:
                 return <Step4_Pricing formData={formData} handleInputChange={handleInputChange} errors={errors} />;
             case 5:
-                return <Step5_Images formData={formData} handleImageUpload={handleImageUpload} removeImage={removeImage} handleInputChange={handleInputChange} imagePreviews={imagePreviews} />;
+                return <Step5_Images formData={formData} handleImageUpload={handleImageUpload} removeImage={removeImage} handleInputChange={handleInputChange} imagePreviews={imagePreviews} errors={errors} />;
             case 6:
                 return <Step6_Contact formData={formData} handleInputChange={handleInputChange} />;
             default:

@@ -215,10 +215,29 @@ export default function EditPostPage() {
   // Image handlers - passed to Step5
   const handleNewImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    
+    // Validate file formats
+    const allowedFormats = ['jpg', 'jpeg', 'png'];
+    const invalidFiles = files.filter(file => {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      return !extension || !allowedFormats.includes(extension);
+    });
+
+    if (invalidFiles.length > 0) {
+      toast.error('Ch\u1ec9 ch\u1ea5p nh\u1eadn \u1ea3nh \u0111\u1ecbnh d\u1ea1ng JPG, JPEG ho\u1eb7c PNG');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
     const previews = files.map((file) => URL.createObjectURL(file));
 
     setNewImages((prev) => [...prev, ...files]);
     setNewImagePreviews((prev) => [...prev, ...previews]);
+    
+    // Clear error if exists
+    if (errors.images) {
+      setErrors(prev => ({ ...prev, images: '' }));
+    }
   };
 
   const removeNewImage = (index: number) => {
@@ -352,6 +371,14 @@ export default function EditPostPage() {
   const handleSubmit = async () => {
     if (!validateStep(currentStep)) return;
 
+    // Final validation for images
+    const totalImages = existingImages.length + newImages.length;
+    if (totalImages < 4) {
+      toast.error('Ph\u1ea3i c\u00f3 \u00edt nh\u1ea5t 4 \u1ea3nh');
+      setCurrentStep(5); // Go to images step
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const payload = buildUpdatePayload(false);
@@ -454,6 +481,7 @@ export default function EditPostPage() {
             onRemoveNew={removeNewImage}
             onSetExistingCover={setExistingAsCover}
             onSetNewCover={setNewAsCover}
+            errors={errors}
           />
         );
       case 6:
