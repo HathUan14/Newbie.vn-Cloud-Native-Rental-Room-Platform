@@ -8,6 +8,7 @@ import {
   ManyToMany,
 } from 'typeorm';
 import { Room } from '../room/entities/room.entity';
+import { UserReview } from '../user-review/user-review.entity';
 
 export enum AuthProvider {
   LOCAL = 'local',
@@ -95,6 +96,34 @@ export class User {
   @OneToMany(() => Room, (room) => room.host)
   rooms: Room[];
 
+  //// Wishlist
   @ManyToMany(() => Room, room => room.watchList)
   savedRooms: Room[];
+
+  //// User Review
+
+  // Các đánh giá mà USER này VIẾT
+  @OneToMany(() => UserReview, (review) => review.reviewer)
+  writtenReviews: UserReview[];
+  // Các đánh giá mà HOST này NHẬN
+  @OneToMany(() => UserReview, (review) => review.host)
+  receivedReviews: UserReview[];
+
+  //// Cache kết quả rating cho mỗi host
+
+  @Column({
+    name: 'avg_rating',
+    type: 'decimal',
+    precision: 5,
+    scale: 3,
+    default: 0,
+  })
+  avgRating: number;
+
+  @Column({
+    name: 'review_count',
+    type: 'int',
+    default: 0,
+  })
+  reviewCount: number;
 }

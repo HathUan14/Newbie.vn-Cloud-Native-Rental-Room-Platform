@@ -190,6 +190,16 @@
   ]
 }
 ```
+
+- POST: `http://localhost:3000/hosts/2/reviews`: user post a new review for a host(id=2), need access token
+```json
+{
+  "rating": 3,
+  "comment": "Chủ phòng thân thiện, hỗ trợ nhanh, phòng đúng mô tả, tuy nhiên hàng xóm ồn ào, chỗ để xe hơi hẹp."
+}
+```
+- GET: `http://localhost:3000/hosts/2/reviews`: get all reviews from host(id=2)
+- PATCH: `http://localhost:3000/hosts/2/reviews/3`: update a review(id=3)
 2. **Front-end**
 
 - localhost:3001/admin/moderation       : Trang kiểm duyệt cho admin
