@@ -8,10 +8,12 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { MapPin, Share2, Heart, Users, Maximize2, Calendar, Shield, Phone, ExternalLink, AlertTriangle, CheckCircle2, Zap, Droplets, Wifi, Bike, Lock, FileText } from 'lucide-react';
+import { MapPin, Share2, Heart, Users, Maximize2, Calendar, Shield, Phone, ExternalLink, 
+  AlertTriangle, CheckCircle2, Zap, Droplets, Wifi, Bike, Lock, FileText } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import DescriptionViewer from '@/components/DescriptionViewer';
 import { useAuth } from '@/contexts/AuthContext';
+import ReviewSection from './components/review/review-section';
 
 // --- CONSTANTS & UTILS ---
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -94,7 +96,10 @@ function MapComponent({ lat, lng }: { lat: number; lng: number }) {
   );
 }
 
+
 // --- MAIN COMPONENT ---
+
+
 export default function RoomDetailPage() {
   const { user } = useAuth(); // Để hiển thị wishlist
   const params = useParams();
@@ -143,20 +148,43 @@ export default function RoomDetailPage() {
   }
 
   return <RoomDetailContent 
-  data={data} 
-  currentUser={user}
-  selectedImage={selectedImage} 
-  setSelectedImage={setSelectedImage} 
-  showAllImages={showAllImages} 
-  setShowAllImages={setShowAllImages} />;
+          data={data} 
+          currentUser={user}
+          selectedImage={selectedImage} 
+          setSelectedImage={setSelectedImage} 
+          showAllImages={showAllImages} 
+          setShowAllImages={setShowAllImages} />;
 }
+
+
 
 function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage, showAllImages, setShowAllImages }: any) {
   const images = data.images || [];
   const amenities = data.roomAmenities || [];
-  const [isSaved, setIsSaved] = useState(false); // wishlist
-  const [isProcessing, setIsProcessing] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+
+  // wishlist
+  const [isSaved, setIsSaved] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // review (rating + comment)
+  type UserReview = {
+    id: number;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    reviewer: {
+      id: number;
+      fullName: string;
+      avatarUrl?: string | null;
+    };
+  };
+  const [reviews, setReviews] = useState<UserReview[]>([]);
+  const [myReview, setMyReview] = useState<UserReview | null>(null);
+  const [myRating, setMyRating] = useState(0);
+  const [myComment, setMyComment] = useState("");
+  // Các trạng thái để thay đổi front-end
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   // lấy thông tin wishlist khi reload page 
   useEffect(() => { 
@@ -166,10 +194,36 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
     } 
   }, [data, currentUser]);
 
+  // Lấy thông tin review khi reload page
+  useEffect(() => {
+    async function fetchReviews() {
+      const res = await fetch(
+        `http://localhost:3000/hosts/${data.host.id}/reviews`,
+        { cache: 'no-store' }
+      );
+      const json = await res.json();
+      const allReviews: UserReview[] = json.data;
+      setReviews(allReviews);
+      if (currentUser) { // Kiểm tra có comment của người dùng hiện tại không
+        const mine = allReviews.find(
+          (r) => r.reviewer.id === currentUser.id
+        );
+        if (mine) {
+          setMyReview(mine);
+          setMyRating(mine.rating);
+          setMyComment(mine.comment);
+        }
+      }
+    }
+    fetchReviews();
+  }, [data.host.id, currentUser]);
+
+
   // console.log('save', isSaved);
   // console.log('watchlist', data.watchList[0].id);
   // console.log('user', currentUser);
   
+  // Lưu/Bỏ lưu trang
   const handleToggleSave = async () => {
     if (isProcessing) return;
     setIsSaved(!isSaved); // toggle lập tức
@@ -191,6 +245,76 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
       setIsProcessing(false);
     }
   };
+
+  // Post review mới
+  async function submitReview() {
+    setIsSubmittingReview(true);
+    await fetch(
+      `http://localhost:3000/hosts/${data.host.id}/reviews`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rating: myRating,
+          comment: myComment,
+        }),
+      }
+    );
+    // Cập nhật ở front-end
+    const res = await fetch(
+      `http://localhost:3000/hosts/${data.host.id}/reviews`,
+      {
+        credentials: 'include',
+      }
+    );
+    const json = await res.json();
+    setReviews(json.data);
+    // tìm review của chính mình và cập nhật
+    const mine = json.data.find(
+      (r: any) => r.reviewer.id === currentUser?.id
+    );
+    setMyReview(mine || null);
+
+    setIsSubmittingReview(false);
+  }
+
+  // Edit review cũ
+  async function updateReview(reviewId: number) {
+    // Cập nhật lập tức front-end rồi cập nhật back-end sau
+    if (!myReview) return;
+    const updatedReviewFast = {
+      ...myReview,
+      rating: myRating,
+      comment: myComment,
+      createdAt: new Date().toISOString(), 
+    };
+    setMyReview(updatedReviewFast);
+
+    const res = await fetch(
+      `http://localhost:3000/hosts/${data.host.id}/reviews/${reviewId}`,
+      {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rating: myRating,
+          comment: myComment,
+        }),
+      }
+    );
+    // Cập nhật ở front-end
+    const updatedReview = await res.json();
+    setMyReview(updatedReview);
+    setReviews((prev) =>
+      prev.map((r) => (r.id === updatedReview.id ? updatedReview : r))
+    );
+  }
+
 
   return (
     <>
@@ -309,9 +433,13 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
 
-            {/* LEFT COLUMN (Details) */}
-            <div className="lg:col-span-2 space-y-6">
 
+
+            {/* LEFT COLUMN (Details) */}
+
+
+
+            <div className="lg:col-span-2 space-y-6">
               {/* Host Info & Quick Stats */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex justify-between items-start">
@@ -423,6 +551,21 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                 </div>
               </div>
 
+              {/* Reviews Section */}
+              <ReviewSection
+                currentUser={currentUser}
+                hostId={data.host.id}
+                myReview={myReview}
+                myRating={myRating}
+                setMyRating={setMyRating}
+                myComment={myComment}
+                setMyComment={setMyComment}
+                isSubmittingReview={isSubmittingReview}
+                reviews={reviews}
+                onSubmitReview={submitReview}
+                onUpdateReview={updateReview}
+              />
+
               {/* Footer Info */}
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -430,9 +573,16 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                   <span>Cập nhật lần cuối: {format(new Date(data.updatedAt), "dd/MM/yyyy 'lúc' HH:mm", { locale: vi })}</span>
                 </div>
               </div>
+
+
             </div>
 
+
+
             {/* RIGHT COLUMN (Sticky Booking Card) */}
+
+
+
             <div className="relative">
               <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6 sticky top-24">
                 {/* Price Card */}

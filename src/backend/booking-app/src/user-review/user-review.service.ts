@@ -14,6 +14,7 @@ import { User } from '../users/user.entity';
 import { CreateUserReviewDto } from './dto/create-user-review.dto';
 import { GetUserReviewsDto } from './dto/get-user-reviews.dto';
 import { UpdateUserReviewDto } from './dto/update-user-review.dto';
+import { UserReviewResponseDto } from './dto/user-review-response.dto';
 @Injectable()
 export class UserReviewService {
     constructor(
@@ -88,13 +89,17 @@ export class UserReviewService {
         const limit = query.limit ?? 10;
         const skip = (page - 1) * limit;
 
-        const [data, total] = await this.reviewRepo.findAndCount({
+        const [reviews, total] = await this.reviewRepo.findAndCount({
             where: { host: { id: hostId } },
             relations: ['reviewer'],
             order: { createdAt: 'DESC' },
             skip,
             take: limit,
         });
+
+        const data: UserReviewResponseDto[] =
+        reviews.map((review) => this.toResponseDto(review));
+
         return {
             data,
             pagination: {
@@ -105,6 +110,25 @@ export class UserReviewService {
             },
         };
     }
+    // Mapper để che dấu các thông tin về người dùng quan trọng trong response khi gọi
+    // GET hosts/:hostId/reviews
+    // tránh lộ Dbschema, frontend phụ thuộc nhiều vào cấu trúc database
+    private toResponseDto(
+        review: UserReview,
+    ): UserReviewResponseDto {
+        return {
+            id: review.id,
+            rating: Number(review.rating),
+            comment: review.comment,
+            createdAt: review.createdAt,
+            reviewer: {
+            id: review.reviewer.id,
+            fullName: review.reviewer.fullName,
+            avatarUrl: review.reviewer.avatarUrl,
+            },
+        };
+    }
+
 
     // Cập nhật rating, lấy record từ table review, tính avg rồi để kết quả vào table user
     // Có thể cải thiện bằng thuật toán incremental (ko cần tính avg mỗi lần thêm)
