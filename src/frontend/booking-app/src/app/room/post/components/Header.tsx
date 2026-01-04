@@ -1,15 +1,15 @@
 import React from 'react';
+import Link from 'next/link';
 import { STEPS } from '../constants';
-
 interface HeaderProps {
     currentStep: number;
 }
 
 const Header: React.FC<HeaderProps> = ({ currentStep }) => {
     return (
-        <div className="fixed top-0 left-0 right-0 bg-white z-50 border-b border-gray-200 shadow-sm">
+        <div className="sticky top-16 bg-white z-40 border-b border-gray-200 shadow-sm">
             <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
-                <div className="font-bold text-2xl text-blue-600">Newbie.com</div>
+                
 
                 {/* Progress Bar */}
                 <div className="hidden md:flex items-center space-x-2">
@@ -48,7 +48,9 @@ const Header: React.FC<HeaderProps> = ({ currentStep }) => {
                     </div>
                 </div>
 
-                <button className="text- font-semibold text-gray-500 hover:text-black underline">Thoát</button>
+                <Link href="/" className="text-sm font-semibold text-gray-500 hover:text-black underline">
+                    Thoát
+                </Link>
             </div>
         </div>
     );
