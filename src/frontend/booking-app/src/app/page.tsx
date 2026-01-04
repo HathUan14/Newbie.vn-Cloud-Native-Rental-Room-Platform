@@ -103,7 +103,7 @@ export default function Home() {
     { name: "Hà Nội", image: "/cities/hanoi.jpg" },
     { name: "Đà Nẵng", image: "/cities/danang.jpg" },
   ];
-
+  const cityPhrase = "Thành phố";
   const features = [
     {
       icon: (
