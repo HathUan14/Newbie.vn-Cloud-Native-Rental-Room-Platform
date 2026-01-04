@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     CheckCircle, XCircle, AlertCircle, Eye,
     MapPin, Phone, Calendar,
@@ -118,6 +120,9 @@ const formatDate = (dateString: string) => {
 // --- 4. MAIN PAGE ---
 
 export default function ModerationPage() {
+    const router = useRouter();
+    const { user, isLoading: authLoading } = useAuth();
+    
     const [viewMode, setViewMode] = useState<'LIST' | 'DETAIL'>('LIST');
     const [listings, setListings] = useState<Room[]>([]);
     const [selectedListing, setSelectedListing] = useState<Room | null>(null);
@@ -142,10 +147,23 @@ export default function ModerationPage() {
         message: string;
     }>({ isOpen: false, type: 'success', title: '', message: '' });
 
+    // Kiểm tra quyền Admin
+    useEffect(() => {
+        if (!authLoading) {
+            if (!user) {
+                router.push('/login');
+            } else if (user.isAdmin !== true || user.isHost === true) {
+                router.push('/');
+            }
+        }
+    }, [user, authLoading, router]);
+
     // 1. Fetch danh sách Pending khi mount
     useEffect(() => {
-        fetchPendingRooms();
-    }, []);
+        if (user?.isAdmin === true && user.isHost !== true) {
+            fetchPendingRooms();
+        }
+    }, [user]);
 
     const fetchPendingRooms = async () => {
         try {
@@ -276,7 +294,7 @@ export default function ModerationPage() {
     };
 
     // --- LOADING STATE ---
-    if (isLoading) {
+    if (authLoading || isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 text-slate-500 gap-2">
                 <Loader2 className="animate-spin" /> Đang tải dữ liệu...
@@ -542,6 +560,8 @@ export default function ModerationPage() {
                         >
                             {/* Nút Đóng */}
                             <button
+                                type="button"
+                                aria-label="Đóng xem ảnh"
                                 className="absolute top-5 right-5 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
                                 onClick={() => setPreviewIndex(null)}
                             >
@@ -550,6 +570,8 @@ export default function ModerationPage() {
 
                             {/* Nút Prev */}
                             <button
+                                type="button"
+                                aria-label="Ảnh trước"
                                 className="absolute left-5 top-1/2 -translate-y-1/2 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
                                 onClick={(e) => {
                                     e.stopPropagation(); // Chặn sự kiện click đóng modal
@@ -574,6 +596,8 @@ export default function ModerationPage() {
 
                             {/* Nút Next */}
                             <button
+                                type="button"
+                                aria-label="Ảnh tiếp theo"
                                 className="absolute right-5 top-1/2 -translate-y-1/2 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
                                 onClick={(e) => {
                                     e.stopPropagation();

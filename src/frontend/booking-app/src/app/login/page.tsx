@@ -194,7 +194,8 @@ const LoginPage: React.FC = () => {
           </div>
 
           <button
-            onClick={handleGoogleLogin}
+            onClick={() =>
+    window.location.href = 'http://localhost:3000/auth/google'}
             disabled={loading}
             className="w-full py-4 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:transform-none flex items-center justify-center"
           >

@@ -10,14 +10,14 @@ interface SearchResultCardProps {
   room: Room;
 }
 
-const PLACEHOLDER_IMAGE = 'https://placehold.co/600x400?text=No+Image';
+// const PLACEHOLDER_IMAGE = 'https://placehold.co/600x400?text=No+Image';
 function getRoomLabel(type: string) {
   return ROOM_TYPES[type as RoomType] || 'Khác';
 }
 
 export default function SearchResultCard({ room }: SearchResultCardProps) {
   const thumbnailObj = room.images?.find((img) => img.isThumbnail) || room.images?.[0];
-  const imageUrl = thumbnailObj?.url || PLACEHOLDER_IMAGE;
+  const imageUrl = thumbnailObj?.url ; //|| PLACEHOLDER_IMAGE;
 
   const [isImageLoading, setIsImageLoading] = useState(true);
 

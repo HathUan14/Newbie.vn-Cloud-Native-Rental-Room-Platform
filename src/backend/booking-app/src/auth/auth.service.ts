@@ -15,6 +15,19 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 
+import axios from 'axios';
+
+async function downloadAvatar(url: string): Promise<string | null> {
+  try {
+    const res = await axios.get(url, { responseType: 'arraybuffer' });
+    // upload lên S3 / Cloudinary / local static
+    return res.data[0];
+  } catch {
+    return null;
+  }
+}
+
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -167,4 +180,57 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
     return user;
   }
+  async googleLogin(googleUser: {
+  googleId: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string;
+}) {
+
+  let user = await this.usersRepository.findOne({
+    where: { googleId: googleUser.googleId },
+  });
+
+
+  if (!user) {
+    user = await this.usersRepository.findOne({
+      where: { email: googleUser.email 
+      },
+    });
+  }
+
+  if (!user) {
+    user = this.usersRepository.create({
+      email: googleUser.email,
+      fullName: googleUser.fullName,
+      avatarUrl: googleUser.avatarUrl ?? await downloadAvatar(googleUser.avatarUrl),
+      googleId: googleUser.googleId,
+      authProvider: AuthProvider.GOOGLE,
+      isActive: false, // Vẫn phải xác thực số điện thoại thông qua
+    });
+    await this.usersRepository.save(user);
+  }
+
+  if (user.authProvider === AuthProvider.LOCAL && !user.googleId) {
+    user.googleId = googleUser.googleId;
+    user.authProvider = AuthProvider.GOOGLE;
+    user.avatarUrl ??= googleUser.avatarUrl;
+    await this.usersRepository.save(user);
+  }
+
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    role: {
+      isAdmin: user.isAdmin,
+      isHost: user.isHost,
+    },
+  };
+
+  return {
+    accessToken: this.jwtService.sign(payload),
+    user,
+  };
+}
+
 }

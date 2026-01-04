@@ -22,6 +22,8 @@ import { FilterRoomDto } from './dto/filter-room.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ModerateRoomDto } from './dto/moderate-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @Controller('rooms')
 export class RoomsController {
@@ -75,7 +77,7 @@ export class RoomsController {
 
   @Get('admin-detail/:id')
   //@UseGuards(JwtAuthGuard)
-  //  @Roles('ADMIN')
+  // @Roles('ADMIN')
   async getRoomDetailForAdmin(@Param('id', ParseIntPipe) id: number) {
     const room = await this.roomsService.findOneForAdmin(id);
     return { success: true, data: room };
@@ -114,8 +116,8 @@ export class RoomsController {
   }
 
   @Patch(':id/moderation')
-  @UseGuards(JwtAuthGuard)
-  // @Roles('ADMIN')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   async moderateRoom(
     @Param('id', ParseIntPipe) id: number,
     @Body() moderateDto: ModerateRoomDto,

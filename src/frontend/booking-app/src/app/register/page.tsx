@@ -142,7 +142,7 @@ export default function RegisterPage() {
 
               <button
                 type="button"
-                onClick={handleGoogleSignUp}
+                onClick={() => { window.location.href = 'http://localhost:3000/auth/google'; }}
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-150 mb-6"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">

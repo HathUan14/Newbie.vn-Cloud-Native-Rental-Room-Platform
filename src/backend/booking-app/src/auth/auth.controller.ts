@@ -15,6 +15,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -149,4 +150,26 @@ export class AuthController {
   async verifyEmail(@Body('token') token: string) {
     return this.authService.verifyEmail(token);
   }
+
+  //Google
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    
+  }
+
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(@Req() req, @Res() res) {
+    const {accessToken} = await this.authService.googleLogin(req.user);
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7* 24* 60 * 60 * 1000, //Thọ 1 tuần
+    });
+    return res.redirect(`http://localhost:3001/`);
+  }
+
 }
