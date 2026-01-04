@@ -306,8 +306,8 @@ export default function Home() {
               <button
                 key={index}
                 onClick={() => {
-                  setSearchQuery({ ...searchQuery, city: city.name });
-                  router.push(`/search?city=${encodeURIComponent(city.name)}`);
+                  setSearchQuery({ ...searchQuery, city: `${cityPhrase} ${city.name}` });
+                  router.push(`/search?city=${encodeURIComponent(`${cityPhrase} ${city.name}`)}`);
                 }}
                 className="group relative h-48 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
               >
