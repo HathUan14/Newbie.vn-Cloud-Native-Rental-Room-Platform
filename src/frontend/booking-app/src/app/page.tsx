@@ -343,7 +343,7 @@ export default function Home() {
               Đăng tin miễn phí và tiếp cận hàng ngàn người tìm phòng mỗi ngày
             </p>
             <Link
-              href="/host/dashboard"
+              href="/dashboard/my-rooms"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition shadow-lg hover:shadow-xl"
             >
               Đăng tin cho thuê
