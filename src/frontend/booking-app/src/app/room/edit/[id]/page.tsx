@@ -422,7 +422,7 @@ export default function EditPostPage() {
 
       if (res.ok && data.success) {
         toast.success("Đã lưu bản nháp!");
-        router.push("/dashboard/my-posts");
+        router.push("/dashboard/my-rooms");
       } else {
         throw new Error(data.message || "Có lỗi xảy ra");
       }

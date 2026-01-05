@@ -256,7 +256,7 @@ export default function CreatePostPage() {
 
             if (res.ok) {
                 toast.success("Đã lưu bản nháp thành công!");
-                router.push('/dashboard/my-posts?status=draft_saved');
+                router.push('/dashboard/my-rooms');
             } else {
                 toast.error(data.message || "Không thể lưu bản nháp");
             }
