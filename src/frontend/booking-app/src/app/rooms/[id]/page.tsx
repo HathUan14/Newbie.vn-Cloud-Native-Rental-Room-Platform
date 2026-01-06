@@ -181,7 +181,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
   };
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [myReview, setMyReview] = useState<UserReview | null>(null);
-  const [myRating, setMyRating] = useState(0);
+  const [myRating, setMyRating] = useState(3);
   const [myComment, setMyComment] = useState("");
   // Các trạng thái để thay đổi front-end
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -608,7 +608,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                 </div>
 
                 {/* 2. CHỦ NHÀ (Tối giản) */}
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
                     {data.host.fullName.charAt(0)}
                   </div>
@@ -621,6 +621,41 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                     Xem hồ sơ
                   </button>
                 </div>
+
+                {/* ⭐ Rating trung bình & số lượt đánh giá */}
+                
+                  {data.host.reviewCount === 0 ? (
+                    <p className="text-slate-500 italic">
+                      Chủ nhà chưa có bài đánh giá nào
+                    </p>
+                  ) : (
+                    <>
+                      <div className="flex-1 mb-6">
+                        <p className="text-slate-500 italic">
+                          Đánh giá chủ nhà
+                        </p>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-1 font-semibold text-slate-900">
+                            <svg
+                              className="w-4 h-4 text-yellow-400 fill-yellow-400"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                            </svg>
+                            <span>
+                              {Number(data.host.avgRating).toFixed(1)}/5
+                            </span>
+                          </div>
+
+                          <span className="text-slate-400">·</span>
+                          <span className="text-slate-600">
+                            {data.host.reviewCount} lượt đánh giá
+                          </span>
+
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                 {/* 3. NÚT HÀNH ĐỘNG (Primary Action) */}
                 <div className="space-y-3 mb-6">
