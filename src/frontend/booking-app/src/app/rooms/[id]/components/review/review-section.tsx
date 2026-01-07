@@ -69,10 +69,25 @@ export default function ReviewSection({
             // Editing
             myReview ? (
             <div className="flex gap-4 p-4 bg-gray-50 rounded-xl border">
-              <img
-                src={myReview.reviewer.avatarUrl || '/avatar-placeholder.png'}
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              {myReview.reviewer.avatarUrl ? (
+                <img
+                  src={myReview.reviewer.avatarUrl}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const fallback = e.currentTarget.nextElementSibling;
+                    if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center flex-shrink-0"
+                style={{ display: myReview.reviewer.avatarUrl ? 'none' : 'flex' }}
+              >
+                <span className="text-white text-sm font-medium">
+                  {myReview.reviewer.fullName?.charAt(0).toUpperCase() || 'U'}
+                </span>
+              </div>
 
               <div className="flex-1">
                 <div className="flex items-center justify-between">
@@ -188,10 +203,25 @@ export default function ReviewSection({
                 key={review.id}
                 className="flex gap-4 p-4 rounded-xl border border-gray-100"
               >
-                <img
-                  src={review.reviewer.avatarUrl || '/avatar-placeholder.png'}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
+                {review.reviewer.avatarUrl ? (
+                  <img
+                    src={review.reviewer.avatarUrl}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      const fallback = e.currentTarget.nextElementSibling;
+                      if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="w-10 h-10 rounded-full bg-blue-500 items-center justify-center flex-shrink-0"
+                  style={{ display: review.reviewer.avatarUrl ? 'none' : 'flex' }}
+                >
+                  <span className="text-white text-sm font-medium">
+                    {review.reviewer.fullName?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                </div>
 
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
