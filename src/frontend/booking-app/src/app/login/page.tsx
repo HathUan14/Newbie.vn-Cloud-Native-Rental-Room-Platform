@@ -8,7 +8,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const LoginPage: React.FC = () => {
-  const { setUser, user } = useAuth();
+  // Lấy các hàm và trạng thái từ context xác thực
+  // Thêm cả hàm refreshUser để lấy thông tin user đầy đủ sau khi đăng nhập
+  const { setUser, user, refreshUser } = useAuth();
   const [formData, setFormData] = React.useState({
     email: "",
     password: "",
@@ -52,7 +54,8 @@ const LoginPage: React.FC = () => {
 
       if (response.ok) {
         setUser(result.data);
-
+        // Refresh để đảm bảo lấy đầy đủ thông tin user từ server
+        await refreshUser();
         router.replace("/");
       } else {
         setError(result.error || "Login failed");
