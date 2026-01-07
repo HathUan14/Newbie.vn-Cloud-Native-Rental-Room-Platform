@@ -609,8 +609,23 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
 
                 {/* 2. CHỦ NHÀ (Tối giản) */}
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
-                    {data.host.fullName.charAt(0)}
+                  {data.host.avatarUrl ? (
+                    <img
+                      src={data.host.avatarUrl}
+                      alt={data.host.fullName}
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling;
+                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200"
+                    style={{ display: data.host.avatarUrl ? 'none' : 'flex' }}
+                  >
+                    {data.host.fullName?.charAt(0).toUpperCase() || 'H'}
                   </div>
                   <div className="flex-1">
                     <p className="text-xs text-slate-500 uppercase font-semibold tracking-wide">Chủ nhà</p>
