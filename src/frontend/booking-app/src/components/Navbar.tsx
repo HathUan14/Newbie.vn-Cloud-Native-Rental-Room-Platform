@@ -125,7 +125,7 @@ export default function Navbar() {
                       </div>
                     </Link>
                     <Link
-                      href="dashboard/bookings"
+                      href="/dashboard/bookings"
                       className="block px-4 py-2 text-l text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                     >
                       <div className="flex items-center gap-2">
