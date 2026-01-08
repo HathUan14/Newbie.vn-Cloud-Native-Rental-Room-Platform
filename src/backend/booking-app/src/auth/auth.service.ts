@@ -155,16 +155,12 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
 
+    // Trả về đầy đủ thông tin user (loại bỏ passwordHash)
+    const { passwordHash, ...userWithoutPassword } = user;
+
     return {
       user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        isActive: user.isActive,
-        access_token: tokens.access_token,
-        //Thêm các trường thông tin role vào JWT payload
-        isHost: user.isHost,
-        isAdmin: user.isAdmin,
+        ...userWithoutPassword,
       },
       ...tokens,
     };

@@ -5,7 +5,8 @@ import {
   IsString, 
   IsPhoneNumber, 
   IsNotEmpty, 
-  Length 
+  Length,
+  ValidateIf
 } from 'class-validator';
 
 export class UpdateUserDto {
@@ -16,6 +17,7 @@ export class UpdateUserDto {
   fullName?: string;
 
   @IsOptional()
+  @ValidateIf((obj) => obj.phoneNumber !== '')
   @IsPhoneNumber('VN', { message: 'Số điện thoại không đúng định dạng Việt Nam' })
   phoneNumber?: string;
 

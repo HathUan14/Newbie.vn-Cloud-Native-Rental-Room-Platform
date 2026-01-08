@@ -73,9 +73,48 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
+      // Lấy data cũ từ user
+      const oldData = {
+        fullName: user?.fullName || "",
+        phoneNumber: user?.phoneNumber || "",
+      };
+
+      // Lấy data mới từ form
+      const newData = {
+        fullName: fullName.trim(),
+        phoneNumber: phoneNumber.trim(),
+      };
+
+      // Kiểm tra fullName hợp lệ
+      if (!newData.fullName) {
+        toast.error("Họ tên không được để trống");
+        setIsSaving(false);
+        return;
+      }
+
+      if (newData.fullName.length < 2 || newData.fullName.length > 100) {
+        toast.error("Họ tên phải từ 2 đến 100 ký tự");
+        setIsSaving(false);
+        return;
+      }
+
+      // Kiểm tra phoneNumber: nếu không rỗng thì phải đúng định dạng
+      if (newData.phoneNumber && !/^(0|\+84)(\d{9,10})$/.test(newData.phoneNumber)) {
+        toast.error("Số điện thoại không đúng định dạng Việt Nam");
+        setIsSaving(false);
+        return;
+      }
+
+      // Tạo FormData để gửi
       const formData = new FormData();
-      formData.append("fullName", fullName);
-      formData.append("phoneNumber", phoneNumber);
+
+      // Chỉ gửi những trường thay đổi
+      if (newData.fullName !== oldData.fullName) {
+        formData.append("fullName", newData.fullName);
+      }
+      if (newData.phoneNumber !== oldData.phoneNumber) {
+        formData.append("phoneNumber", newData.phoneNumber);
+      }
       if (avatarFile) {
         formData.append("avatar", avatarFile);
       }
