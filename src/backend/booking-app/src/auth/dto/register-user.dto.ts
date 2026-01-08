@@ -6,7 +6,7 @@ import {
   Matches,
   MinLength,
 } from 'class-validator';
-import { AuthProvider } from 'src/users/user.entity';
+import { AuthProvider } from 'src/user/user.entity';
 export class RegisterUserDto {
   //Tên: Không được để trống, kiểu chuỗi, độ dài tối thiểu 2 ký tự
   @IsNotEmpty()

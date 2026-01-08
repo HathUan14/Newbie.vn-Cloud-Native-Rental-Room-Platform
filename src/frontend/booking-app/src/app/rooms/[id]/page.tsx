@@ -8,8 +8,11 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { MapPin, Share2, Heart, Users, Maximize2, Calendar, Shield, Phone, ExternalLink, 
-  AlertTriangle, CheckCircle2, Zap, Droplets, Wifi, Bike, Lock, FileText } from 'lucide-react';
+import {
+  MapPin, Share2, Heart, Users, Maximize2, Calendar, Shield, Phone, ExternalLink,
+  AlertTriangle, CheckCircle2, Zap, Droplets, Wifi, Bike, Lock, FileText
+} from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 import 'leaflet/dist/leaflet.css';
 import DescriptionViewer from '@/components/DescriptionViewer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,7 +114,7 @@ export default function RoomDetailPage() {
   useEffect(() => {
     const fetchRoomDetail = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/rooms/${params.id}`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/${params.id}`);
         const result = await response.json();
         if (result.success) {
           setData(result.data);
@@ -147,13 +150,13 @@ export default function RoomDetailPage() {
     );
   }
 
-  return <RoomDetailContent 
-          data={data} 
-          currentUser={user}
-          selectedImage={selectedImage} 
-          setSelectedImage={setSelectedImage} 
-          showAllImages={showAllImages} 
-          setShowAllImages={setShowAllImages} />;
+  return <RoomDetailContent
+    data={data}
+    currentUser={user}
+    selectedImage={selectedImage}
+    setSelectedImage={setSelectedImage}
+    showAllImages={showAllImages}
+    setShowAllImages={setShowAllImages} />;
 }
 
 
@@ -167,7 +170,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
   const [isSaved, setIsSaved] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // review (rating + comment)
+  // Host review (rating + comment)
   type UserReview = {
     id: number;
     rating: number;
@@ -183,28 +186,96 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
   const [myReview, setMyReview] = useState<UserReview | null>(null);
   const [myRating, setMyRating] = useState(3);
   const [myComment, setMyComment] = useState("");
-  // Các trạng thái để thay đổi front-end
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  
+  // Room review states
+  type RoomReview = {
+    id: number;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    renter: {
+      id: number;
+      fullName: string;
+      avatarUrl?: string | null;
+    };
+  };
+  const [roomReviews, setRoomReviews] = useState<RoomReview[]>([]);
+  const [myRoomReview, setMyRoomReview] = useState<RoomReview | null>(null);
+  const [myRoomRating, setMyRoomRating] = useState(3);
+  const [myRoomComment, setMyRoomComment] = useState("");
+  const [isSubmittingRoomReview, setIsSubmittingRoomReview] = useState(false);
+  
+  // Kiểm tra user có booking CONFIRMED với host này không
+  const [hasConfirmedBooking, setHasConfirmedBooking] = useState(false);
+  // Lưu bookingId để submit room review
+  const [confirmedBookingId, setConfirmedBookingId] = useState<number | null>(null);
 
   // lấy thông tin wishlist khi reload page 
-  useEffect(() => { 
-    if (data?.watchList && currentUser) { 
-      const saved = data.watchList.some( (u: any) => u.id === currentUser.id ); 
-      setIsSaved(saved); 
-    } 
+  useEffect(() => {
+    if (data?.watchList && currentUser) {
+      const saved = data.watchList.some((u: any) => u.id === currentUser.id);
+      setIsSaved(saved);
+    }
   }, [data, currentUser]);
 
-  // Lấy thông tin review khi reload page
+  // Kiểm tra user có booking CONFIRMED với host/room này không
   useEffect(() => {
-    async function fetchReviews() {
+    async function checkConfirmedBooking() {
+      if (!currentUser) {
+        setHasConfirmedBooking(false);
+        setConfirmedBookingId(null);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/booking/my-bookings`,
+          { 
+            credentials: 'include',
+            cache: 'no-store' 
+          }
+        );
+        const json = await res.json();
+        if (json.success && json.data) {
+          // Tìm booking CONFIRMED với phòng này
+          const confirmedBooking = json.data.find((booking: any) => 
+            booking.status === 'CONFIRMED' && 
+            booking.roomId === data.id
+          );
+          
+          if (confirmedBooking) {
+            setHasConfirmedBooking(true);
+            setConfirmedBookingId(confirmedBooking.id);
+          } else {
+            // Fallback: kiểm tra booking CONFIRMED với host
+            const hasConfirmedWithHost = json.data.some((booking: any) => 
+              booking.status === 'CONFIRMED' && 
+              booking.room?.host?.id === data.host.id
+            );
+            setHasConfirmedBooking(hasConfirmedWithHost);
+            setConfirmedBookingId(null);
+          }
+        }
+      } catch (err) {
+        console.error('Check confirmed booking failed:', err);
+        setHasConfirmedBooking(false);
+        setConfirmedBookingId(null);
+      }
+    }
+    checkConfirmedBooking();
+  }, [currentUser, data.id, data.host.id]);
+
+  // Lấy thông tin host review khi reload page
+  useEffect(() => {
+    async function fetchHostReviews() {
       const res = await fetch(
-        `http://localhost:3000/hosts/${data.host.id}/reviews`,
+        `${process.env.NEXT_PUBLIC_API_URL}/hosts/${data.host.id}/reviews`,
         { cache: 'no-store' }
       );
       const json = await res.json();
-      const allReviews: UserReview[] = json.data;
+      const allReviews: UserReview[] = json.data || [];
       setReviews(allReviews);
-      if (currentUser) { // Kiểm tra có comment của người dùng hiện tại không
+      if (currentUser) {
         const mine = allReviews.find(
           (r) => r.reviewer.id === currentUser.id
         );
@@ -215,14 +286,43 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
         }
       }
     }
-    fetchReviews();
+    fetchHostReviews();
   }, [data.host.id, currentUser]);
+
+  // Lấy thông tin room review khi reload page
+  useEffect(() => {
+    async function fetchRoomReviews() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/review/room/${data.id}`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        // Backend trả về trực tiếp mảng review
+        const allRoomReviews: RoomReview[] = Array.isArray(json) ? json : (json.data || []);
+        setRoomReviews(allRoomReviews);
+        if (currentUser) {
+          const mine = allRoomReviews.find(
+            (r) => r.renter?.id === currentUser.id
+          );
+          if (mine) {
+            setMyRoomReview(mine);
+            setMyRoomRating(mine.rating);
+            setMyRoomComment(mine.comment);
+          }
+        }
+      } catch (err) {
+        console.error('Fetch room reviews failed:', err);
+      }
+    }
+    fetchRoomReviews();
+  }, [data.id, currentUser]);
 
 
   // console.log('save', isSaved);
   // console.log('watchlist', data.watchList[0].id);
   // console.log('user', currentUser);
-  
+
   // Lưu/Bỏ lưu trang
   const handleToggleSave = async () => {
     if (isProcessing) return;
@@ -230,7 +330,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
     setIsProcessing(true); // chặn spam nút lưu tin
     try {
       const res = await fetch(
-        `http://localhost:3000/rooms/${data.id}/toggle-save`,
+        `${process.env.NEXT_PUBLIC_API_URL}/rooms/${data.id}/toggle-save`,
         {
           method: 'POST',
           credentials: 'include',
@@ -249,36 +349,48 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
   // Post review mới
   async function submitReview() {
     setIsSubmittingReview(true);
-    await fetch(
-      `http://localhost:3000/hosts/${data.host.id}/reviews`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rating: myRating,
-          comment: myComment,
-        }),
+    try {
+      const postRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/hosts/${data.host.id}/reviews`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rating: myRating,
+            comment: myComment,
+          }),
+        }
+      );
+      const postData = await postRes.json();
+      
+      if (postData.id || postRes.ok) {
+        toast.success('Đánh giá chủ nhà thành công!');
+        // Cập nhật ở front-end
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/hosts/${data.host.id}/reviews`,
+          {
+            credentials: 'include',
+          }
+        );
+        const json = await res.json();
+        setReviews(json.data);
+        // tìm review của chính mình và cập nhật
+        const mine = json.data.find(
+          (r: any) => r.reviewer.id === currentUser?.id
+        );
+        setMyReview(mine || null);
+      } else {
+        toast.error(postData.message || 'Có lỗi xảy ra');
       }
-    );
-    // Cập nhật ở front-end
-    const res = await fetch(
-      `http://localhost:3000/hosts/${data.host.id}/reviews`,
-      {
-        credentials: 'include',
-      }
-    );
-    const json = await res.json();
-    setReviews(json.data);
-    // tìm review của chính mình và cập nhật
-    const mine = json.data.find(
-      (r: any) => r.reviewer.id === currentUser?.id
-    );
-    setMyReview(mine || null);
-
-    setIsSubmittingReview(false);
+    } catch (err) {
+      console.error('Submit host review failed:', err);
+      toast.error('Không thể gửi đánh giá');
+    } finally {
+      setIsSubmittingReview(false);
+    }
   }
 
   // Edit review cũ
@@ -289,30 +401,131 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
       ...myReview,
       rating: myRating,
       comment: myComment,
-      createdAt: new Date().toISOString(), 
+      createdAt: new Date().toISOString(),
     };
     setMyReview(updatedReviewFast);
 
-    const res = await fetch(
-      `http://localhost:3000/hosts/${data.host.id}/reviews/${reviewId}`,
-      {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rating: myRating,
-          comment: myComment,
-        }),
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/hosts/${data.host.id}/reviews/${reviewId}`,
+        {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rating: myRating,
+            comment: myComment,
+          }),
+        }
+      );
+      // Cập nhật ở front-end
+      const updatedReview = await res.json();
+      if (updatedReview.id) {
+        toast.success('Cập nhật đánh giá thành công!');
+        setMyReview(updatedReview);
+        setReviews((prev) =>
+          prev.map((r) => (r.id === updatedReview.id ? updatedReview : r))
+        );
       }
-    );
-    // Cập nhật ở front-end
-    const updatedReview = await res.json();
-    setMyReview(updatedReview);
-    setReviews((prev) =>
-      prev.map((r) => (r.id === updatedReview.id ? updatedReview : r))
-    );
+    } catch (err) {
+      console.error('Update host review failed:', err);
+      toast.error('Không thể cập nhật đánh giá');
+    }
+  }
+
+  // Post room review mới
+  async function submitRoomReview() {
+    if (!confirmedBookingId) {
+      console.error('No confirmed booking found');
+      toast.error('Bạn cần có đơn đặt phòng đã thanh toán để đánh giá');
+      return;
+    }
+    setIsSubmittingRoomReview(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/review`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            bookingId: confirmedBookingId,
+            rating: myRoomRating,
+            comment: myRoomComment,
+          }),
+        }
+      );
+      const result = await res.json();
+      if (result.id) {
+        toast.success('Đánh giá phòng thành công!');
+        // Refresh room reviews
+        const reviewsRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/review/room/${data.id}`,
+          { cache: 'no-store' }
+        );
+        const json = await reviewsRes.json();
+        const allRoomReviews = Array.isArray(json) ? json : (json.data || []);
+        setRoomReviews(allRoomReviews);
+        const mine = allRoomReviews.find(
+          (r: any) => r.renter?.id === currentUser?.id
+        );
+        setMyRoomReview(mine || null);
+      } else {
+        toast.error(result.message || 'Có lỗi xảy ra');
+      }
+    } catch (err) {
+      console.error('Submit room review failed:', err);
+      toast.error('Không thể gửi đánh giá');
+    } finally {
+      setIsSubmittingRoomReview(false);
+    }
+  }
+
+  // Edit room review cũ
+  async function updateRoomReview(reviewId: number) {
+    if (!myRoomReview) return;
+    const updatedReviewFast = {
+      ...myRoomReview,
+      rating: myRoomRating,
+      comment: myRoomComment,
+      createdAt: new Date().toISOString(),
+    };
+    setMyRoomReview(updatedReviewFast);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/review/${reviewId}`,
+        {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rating: myRoomRating,
+            comment: myRoomComment,
+          }),
+        }
+      );
+      const updatedReview = await res.json();
+      if (updatedReview.id) {
+        toast.success('Cập nhật đánh giá thành công!');
+        setMyRoomReview({
+          ...updatedReview,
+          renter: myRoomReview.renter
+        });
+        setRoomReviews((prev) =>
+          prev.map((r) => (r.id === updatedReview.id ? { ...updatedReview, renter: r.renter } : r))
+        );
+      }
+    } catch (err) {
+      console.error('Update room review failed:', err);
+      toast.error('Không thể cập nhật đánh giá');
+    }
   }
 
 
@@ -364,8 +577,8 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                   onClick={handleToggleSave}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition border 
                     ${isSaved
-                    ? 'bg-red-50 border-red-200 text-red-600'
-                    : 'border-gray-200 bg-white hover:bg-gray-100'
+                      ? 'bg-red-50 border-red-200 text-red-600'
+                      : 'border-gray-200 bg-white hover:bg-gray-100'
                     } 
                     ${isProcessing ? 'opacity-60 cursor-not-allowed' : ''}`
                   }
@@ -555,6 +768,8 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
               <ReviewSection
                 currentUser={currentUser}
                 hostId={data.host.id}
+                roomId={data.id}
+                // Host review props
                 myReview={myReview}
                 myRating={myRating}
                 setMyRating={setMyRating}
@@ -564,6 +779,17 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                 reviews={reviews}
                 onSubmitReview={submitReview}
                 onUpdateReview={updateReview}
+                // Room review props
+                roomReviews={roomReviews}
+                myRoomReview={myRoomReview}
+                myRoomRating={myRoomRating}
+                setMyRoomRating={setMyRoomRating}
+                myRoomComment={myRoomComment}
+                setMyRoomComment={setMyRoomComment}
+                isSubmittingRoomReview={isSubmittingRoomReview}
+                onSubmitRoomReview={submitRoomReview}
+                onUpdateRoomReview={updateRoomReview}
+                hasConfirmedBooking={hasConfirmedBooking}
               />
 
               {/* Footer Info */}
@@ -586,79 +812,61 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
             <div className="relative">
               <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6 sticky top-24">
                 {/* Price Card */}
-                <div className="flex justify-between items-start mb-6 pb-4 border-b border-slate-100">
-                  <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-slate-900">
-                        {formatCurrency(data.pricePerMonth)}
-                      </span>
-                      <span className="text-slate-500 font-medium text-sm">/tháng</span>
+                <div className="pb-5 mb-5 border-b border-slate-100">
+                  <div className="flex items-baseline gap-1 mb-3">
+                    <span className="text-3xl font-bold text-slate-900">
+                      {formatCurrency(data.pricePerMonth)}
+                    </span>
+                    <span className="text-slate-500 font-medium">/tháng</span>
+                  </div>
+                  {data.deposit > 0 ? (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-semibold border border-green-200">
+                      <Shield className="w-4 h-4" />
+                      Đặt cọc: {formatCurrency(data.deposit)}
+                    </div>
+                  ) : (
+                    <span className="text-sm text-slate-400">✨ Miễn phí đặt cọc</span>
+                  )}
+                </div>
+
+                {/* 2. CHỦ NHÀ + Rating */}
+                <div className="pb-5 mb-5 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                      {data.host.fullName.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-slate-500 uppercase font-medium tracking-wide">Chủ nhà</p>
+                      <p className="font-semibold text-slate-900 truncate">{data.host.fullName}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    {data.deposit > 0 ? (
-                      <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 rounded-md text-xs font-bold border border-green-200">
-                        <Shield className="w-3 h-3" />
-                        Cọc: {formatCurrency(data.deposit)}
-                      </div>
+
+                  {/* Rating */}
+                  <div className="mt-3 flex items-center justify-between">
+                    {data.host.reviewCount === 0 ? (
+                      <p className="text-sm text-slate-400">Chưa có đánh giá</p>
                     ) : (
-                      <span className="text-xs text-slate-400">Miễn phí cọc</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. CHỦ NHÀ (Tối giản) */}
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold border border-slate-200">
-                    {data.host.fullName.charAt(0)}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-slate-500 uppercase font-semibold tracking-wide">Chủ nhà</p>
-                    <p className="font-bold text-slate-900 truncate">{data.host.fullName}</p>
-                  </div>
-                  {/* Link xem profile host nếu cần */}
-                  <button className="text-xs text-blue-600 font-medium hover:underline">
-                    Xem hồ sơ
-                  </button>
-                </div>
-
-                {/* ⭐ Rating trung bình & số lượt đánh giá */}
-                
-                  {data.host.reviewCount === 0 ? (
-                    <p className="text-slate-500 italic">
-                      Chủ nhà chưa có bài đánh giá nào
-                    </p>
-                  ) : (
-                    <>
-                      <div className="flex-1 mb-6">
-                        <p className="text-slate-500 italic">
-                          Đánh giá chủ nhà
-                        </p>
-                        <div className="flex items-center gap-2 text-sm">
-                          <div className="flex items-center gap-1 font-semibold text-slate-900">
-                            <svg
-                              className="w-4 h-4 text-yellow-400 fill-yellow-400"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                            </svg>
-                            <span>
-                              {Number(data.host.avgRating).toFixed(1)}/5
-                            </span>
-                          </div>
-
-                          <span className="text-slate-400">·</span>
-                          <span className="text-slate-600">
-                            {data.host.reviewCount} lượt đánh giá
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-1">
+                          <svg className="w-4 h-4 text-yellow-400 fill-yellow-400" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                          </svg>
+                          <span className="font-semibold text-slate-900">
+                            {Number(data.host.avgRating).toFixed(1)}
                           </span>
-
                         </div>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-slate-500">{data.host.reviewCount} đánh giá</span>
                       </div>
-                    </>
-                  )}
+                    )}
+                    <button className="text-xs text-blue-600 font-medium hover:underline">
+                      Xem hồ sơ
+                    </button>
+                  </div>
+                </div>
 
                 {/* 3. NÚT HÀNH ĐỘNG (Primary Action) */}
-                <div className="space-y-3 mb-6">
+                <div className="space-y-3 mb-5">
                   <button
                     onClick={() => setShowBookingModal(true)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-base active:scale-[0.98]"
@@ -672,7 +880,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                 </div>
 
                 {/* 4. LIÊN HỆ PHỤ (Secondary Actions) */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="grid grid-cols-2 gap-3 mb-5">
                   <a
                     href={`tel:${data.host.phoneNumber}`}
                     className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-slate-200 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-all"
@@ -732,9 +940,9 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
 
       {/* BOOKING MODAL */}
       {showBookingModal && (
-        <BookingModal 
-          room={data} 
-          onClose={() => setShowBookingModal(false)} 
+        <BookingModal
+          room={data}
+          onClose={() => setShowBookingModal(false)}
         />
       )}
 
@@ -836,16 +1044,20 @@ function BookingModal({ room, onClose }: { room: any; onClose: () => void }) {
         },
         body: JSON.stringify({
           roomId: room.id,
-          moveInDate: moveInDate,
-          date: new Date().toISOString(),
+          moveInDate: new Date(moveInDate).toISOString(),
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        alert('✅ Thuê phòng thành công! Vui lòng chờ chủ nhà xác nhận.');
-        window.location.href = '/dashboard/bookings';
+        toast.success('Gửi yêu cầu thuê phòng thành công! Vui lòng chờ chủ nhà xác nhận.', {
+          duration: 3000,
+          icon: '✅',
+        });
+        setTimeout(() => {
+          window.location.href = '/dashboard/bookings';
+        }, 1500);
       } else {
         setError(result.msg || 'Có lỗi xảy ra. Vui lòng thử lại.');
       }
@@ -858,6 +1070,7 @@ function BookingModal({ room, onClose }: { room: any; onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Toaster position="top-center" />
       <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
@@ -909,7 +1122,7 @@ function BookingModal({ room, onClose }: { room: any; onClose: () => void }) {
             {/* Price Summary */}
             <div className="bg-blue-50 rounded-xl p-4 space-y-3 border border-blue-100">
               <h4 className="font-bold text-gray-900 text-sm">Chi tiết thanh toán</h4>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-700">Giá thuê/tháng</span>
                 <span className="font-bold text-gray-900">{formatCurrency(totalPrice)}</span>
@@ -918,7 +1131,7 @@ function BookingModal({ room, onClose }: { room: any; onClose: () => void }) {
               <div className="flex justify-between items-center pt-3 border-t border-blue-200">
                 <span className="text-sm text-gray-700 flex items-center gap-1.5">
                   <Shield className="w-4 h-4 text-blue-600" />
-                  Tiền cọc 
+                  Tiền cọc
                 </span>
                 <span className="font-bold text-blue-600 text-lg">{formatCurrency(room.deposit)}</span>
               </div>

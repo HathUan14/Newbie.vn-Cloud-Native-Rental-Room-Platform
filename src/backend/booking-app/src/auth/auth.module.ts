@@ -4,13 +4,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { RolesGuard } from './roles.guard';
 
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { UsersModule } from '../users/users.module';
+import { UsersModule } from '../user/users.module';
 import { MailModule } from '../mail/mail.module';
 import {GoogleStrategy} from './strategies/google.strategy';
 @Module({

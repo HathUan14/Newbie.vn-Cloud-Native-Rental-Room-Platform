@@ -2,6 +2,7 @@ import { Controller, Post, Get, Body, Query, Req, UseGuards, BadRequestException
 import { PaymentService } from './payment.service';
 import type { Request } from 'express';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { TransactionFilterDto } from './dto/transaction-filter.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BookingService } from '../booking/booking.service';
 import { TransactionStatus } from './payment.constant';
@@ -182,5 +183,19 @@ export class PaymentController {
         return { RspCode: '99', Message: 'Unknown error' };
       }
     }
+  }
+
+  @Get('transactions')
+  @UseGuards(JwtAuthGuard)
+  async getTransactions(@Query() filter: TransactionFilterDto, @Req() req: any) {
+    const transactions = await this.paymentService.getTransactions(
+      req.user.id,
+      filter,
+    );
+    return {
+      success: true,
+      message: 'Lấy danh sách giao dịch thành công',
+      data: transactions,
+    };
   }
 }

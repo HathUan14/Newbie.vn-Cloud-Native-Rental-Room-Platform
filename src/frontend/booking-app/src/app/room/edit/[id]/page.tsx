@@ -59,6 +59,9 @@ export default function EditPostPage() {
     address: "",
     latitude: 10.8231,
     longitude: 106.6297,
+    cityName: "",
+    districtName: "",
+    wardName: "",
     area: 20,
     guestCapacity: 1,
     pricePerMonth: 0,
@@ -97,7 +100,7 @@ export default function EditPostPage() {
     try {
       setIsLoading(true);
       const res = await fetch(
-        `http://localhost:3000/rooms/my-rooms/${roomId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/rooms/my-rooms/${roomId}`,
         {
           credentials: "include",
         }
@@ -135,6 +138,9 @@ export default function EditPostPage() {
         address: room.address || "",
         latitude: room.latitude || 10.8231,
         longitude: room.longitude || 106.6297,
+        cityName: room.city || "",
+        districtName: room.district || "",
+        wardName: room.ward || "",
         area: room.area || 20,
         guestCapacity: room.guestCapacity || 1,
         pricePerMonth: Number(room.pricePerMonth) || 0,
@@ -383,7 +389,7 @@ export default function EditPostPage() {
       setIsSubmitting(true);
       const payload = buildUpdatePayload(false);
 
-      const res = await fetch(`http://localhost:3000/rooms/${roomId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}`, {
         method: "PATCH",
         credentials: "include",
         body: payload,
@@ -412,7 +418,7 @@ export default function EditPostPage() {
       setIsSubmitting(true);
       const payload = buildUpdatePayload(true);
 
-      const res = await fetch(`http://localhost:3000/rooms/${roomId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/${roomId}`, {
         method: "PATCH",
         credentials: "include",
         body: payload,

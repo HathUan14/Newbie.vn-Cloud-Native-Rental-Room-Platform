@@ -9,10 +9,10 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
-import { User, AuthProvider } from '../users/user.entity';
+import { User, AuthProvider } from '../user/user.entity';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
-import { UsersService } from '../users/users.service';
+import { UsersService } from '../user/users.service';
 import { MailService } from '../mail/mail.service';
 
 import axios from 'axios';
@@ -148,6 +148,11 @@ export class AuthService {
     if (!isMatch)
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
 
+    // Kiểm tra tài khoản có bị khóa không
+    if (user.lockReason) {
+      throw new UnauthorizedException(`Tài khoản đã bị khóa. Lý do: ${user.lockReason}`);
+    }
+
     const tokens = await this.generateTokens(user);
 
     return {
@@ -180,6 +185,56 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
     return user;
   }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersRepository.findOne({ where: { email } });
+
+    if (!user) {
+      // Không thông báo user không tồn tại để tránh lộ thông tin
+      return { message: 'Nếu email tồn tại, link reset password đã được gửi' };
+    }
+
+    // Tạo token reset password với thời hạn 1 giờ
+    const resetToken = this.jwtService.sign(
+      { userId: user.id, type: 'reset_password' },
+      { expiresIn: '1h' },
+    );
+
+    // Gửi email chứa link reset password
+    await this.mailService.sendPasswordReset(user, resetToken);
+
+    return { message: 'Nếu email tồn tại, link reset password đã được gửi' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      if (decoded.type !== 'reset_password') {
+        throw new BadRequestException('Token không hợp lệ');
+      }
+
+      const user = await this.usersRepository.findOne({
+        where: { id: decoded.userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User không tồn tại');
+      }
+
+      // Hash mật khẩu mới
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.passwordHash = hashedPassword;
+      await this.usersRepository.save(user);
+
+      return { message: 'Đổi mật khẩu thành công' };
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') {
+        throw new BadRequestException('Token đã hết hạn');
+      }
+      throw new BadRequestException('Token không hợp lệ hoặc đã hết hạn');
+    }
+  }
   async googleLogin(googleUser: {
   googleId: string;
   email: string;
@@ -209,6 +264,11 @@ export class AuthService {
       isActive: false, // Vẫn phải xác thực số điện thoại thông qua
     });
     await this.usersRepository.save(user);
+  }
+
+  // Kiểm tra tài khoản có bị khóa không
+  if (user.lockReason) {
+    throw new UnauthorizedException(`Tài khoản đã bị khóa. Lý do: ${user.lockReason}`);
   }
 
   if (user.authProvider === AuthProvider.LOCAL && !user.googleId) {

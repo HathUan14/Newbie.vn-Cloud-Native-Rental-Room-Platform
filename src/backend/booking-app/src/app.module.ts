@@ -1,25 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
-import { User } from './users/user.entity';
-import { UsersModule } from './users/users.module';
+import { UsersModule } from './user/users.module';
 import { AuthModule } from './auth/auth.module';
-
 import { RoomsModule } from './room/rooms.module';
-import { Room } from './room/entities/room.entity';
-import { PostsModule } from './posts/posts.module';
-//import { AdminModerationModule } from './admin-moderation/admin-mod.module';
-
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
 import { BookingModule } from './booking/booking.module';
 import { PaymentModule } from './payment/payment.module';
-import { Booking } from './booking/entities/booking.entity'
 import { DisputeModule } from './dispute/dispute.module';
 import { ReviewModule } from './review/review.module';
 import { UserReviewModule } from './user-review/user-review.module';
+import { HostDashboardModule } from './dashboard/host-dashboard.module';
 
 @Module({
   imports: [
@@ -62,12 +55,12 @@ import { UserReviewModule } from './user-review/user-review.module';
     UsersModule,
     AuthModule,
     RoomsModule,
-    PostsModule,
     BookingModule,
     PaymentModule,
     DisputeModule,
     ReviewModule,
-    UserReviewModule
+    UserReviewModule,
+    HostDashboardModule,
   ],
 })
 export class AppModule { }

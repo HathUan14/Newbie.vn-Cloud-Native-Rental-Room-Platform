@@ -70,7 +70,7 @@ export default function RegisterPage() {
     setErrors({});
 
     try {
-      const response = await fetch("http://localhost:3000/auth/register", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -142,7 +142,7 @@ export default function RegisterPage() {
 
               <button
                 type="button"
-                onClick={() => { window.location.href = 'http://localhost:3000/auth/google'; }}
+                onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`; }}
                 className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-150 mb-6"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">

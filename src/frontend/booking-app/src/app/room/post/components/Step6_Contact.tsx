@@ -75,7 +75,7 @@ const Step6_Contact: React.FC<Step6Props> = ({ formData, handleInputChange }) =>
 
         try {
             setIsUpdating(true);
-            const res = await fetch('http://localhost:3000/users/profile', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

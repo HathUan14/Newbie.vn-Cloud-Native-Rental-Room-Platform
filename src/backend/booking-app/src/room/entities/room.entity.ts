@@ -11,7 +11,7 @@ import {
   JoinTable,
   Index,
 } from 'typeorm';
-import { User } from '../../users/user.entity';
+import { User } from '../../user/user.entity';
 import { RoomImage } from './room-image.entity';
 import { RoomAmenity } from './room-amenity.entity';
 
@@ -187,7 +187,7 @@ export class Room {
   totalViews: number;   //Tổng số lượt xem phòng, mặc định bằng 0
 
   // --- RELATIONS ---
-  @ManyToOne(() => User, (user) => user.rooms, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user: User) => user.rooms, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'host_id' })
   host: User;
 
@@ -197,7 +197,7 @@ export class Room {
   @OneToMany(() => RoomAmenity, (ra) => ra.room, { cascade: true })
   roomAmenities: RoomAmenity[];
 
-  @ManyToMany(() => User, user => user.savedRooms, { cascade: true })
+  @ManyToMany(() => User, (user: User) => user.savedRooms, { cascade: true })
   @JoinTable({
     name: 'room_wishlist',
     joinColumn: {

@@ -1,24 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import toast, { Toaster } from 'react-hot-toast';
 import {
   FileWarning,
-  ArrowLeft,
   RefreshCw,
   User,
   Home,
-  Calendar,
-  DollarSign,
   CheckCircle,
   XCircle,
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 
 // Types
 interface Dispute {
@@ -61,7 +56,6 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function AdminDisputesPage() {
-  const { user, isLoading: authLoading } = useAuth();
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
@@ -73,17 +67,10 @@ export default function AdminDisputesPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
+  // Auth đã được kiểm tra ở layout
   useEffect(() => {
-    if (!authLoading && user) {
-      if (!user.isAdmin) {
-        window.location.href = '/';
-        return;
-      }
-      fetchDisputes();
-    } else if (!authLoading && !user) {
-      window.location.href = '/login';
-    }
-  }, [user, authLoading]);
+    fetchDisputes();
+  }, []);
 
   const fetchDisputes = async () => {
     setLoading(true);
@@ -166,7 +153,7 @@ export default function AdminDisputesPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -177,21 +164,14 @@ export default function AdminDisputesPage() {
     );
   }
 
-  if (!user?.isAdmin) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Toaster position="top-center" reverseOrder={false} />
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/admin" className="p-2 hover:bg-gray-100 rounded-lg transition">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
-            <div className="flex-1">
+      <div className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-10">
+        <div className="px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
                 <FileWarning className="w-8 h-8 text-orange-600" />
                 Quản lý khiếu nại
@@ -200,10 +180,11 @@ export default function AdminDisputesPage() {
             </div>
             <button 
               onClick={fetchDisputes} 
-              className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-600" 
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition font-medium"
               title="Làm mới"
             >
-              <RefreshCw className="w-5 h-5" />
+              <RefreshCw className="w-4 h-4" />
+              <span className="hidden sm:inline">Làm mới</span>
             </button>
           </div>
 

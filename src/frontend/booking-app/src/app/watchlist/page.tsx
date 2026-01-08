@@ -16,7 +16,7 @@ export default function WatchlistPage() {
   useEffect(() => {
     const fetchWishlist = async () => {
       try {
-        const res = await fetch('http://localhost:3000/rooms/watchlist', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/watchlist`, {
           credentials: 'include',
         });
 

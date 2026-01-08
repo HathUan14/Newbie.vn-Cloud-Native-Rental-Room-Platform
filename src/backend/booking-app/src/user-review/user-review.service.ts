@@ -10,11 +10,14 @@ import { QueryFailedError } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserReview } from './user-review.entity';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
+import { Booking } from '../booking/entities/booking.entity';
+import { BookingStatus } from '../booking/booking.constant';
 import { CreateUserReviewDto } from './dto/create-user-review.dto';
 import { GetUserReviewsDto } from './dto/get-user-reviews.dto';
 import { UpdateUserReviewDto } from './dto/update-user-review.dto';
 import { UserReviewResponseDto } from './dto/user-review-response.dto';
+
 @Injectable()
 export class UserReviewService {
     constructor(
@@ -23,6 +26,9 @@ export class UserReviewService {
 
         @InjectRepository(User)
         private readonly userRepo: Repository<User>,
+
+        @InjectRepository(Booking)
+        private readonly bookingRepo: Repository<Booking>,
     ) {}
 
     async createReview(
@@ -31,21 +37,51 @@ export class UserReviewService {
         dto: CreateUserReviewDto,
     ) {
         if (reviewerId === hostId) {
-            throw new BadRequestException('You cannot review yourself');
+            throw new BadRequestException('Bạn không thể tự đánh giá chính mình');
         }
 
         const host = await this.userRepo.findOne({
             where: { id: hostId, isHost: true },
         });
         if (!host) {
-            throw new NotFoundException('Host not found');
+            throw new NotFoundException('Không tìm thấy chủ nhà');
         }
 
         const reviewer = await this.userRepo.findOne({
             where: { id: reviewerId },
         });
         if (!reviewer) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException('Không tìm thấy người dùng');
+        }
+
+        // ✅ Kiểm tra reviewer phải có booking CONFIRMED với host này
+        const confirmedBooking = await this.bookingRepo.findOne({
+            where: {
+                renterId: reviewerId,
+                status: BookingStatus.CONFIRMED,
+            },
+            relations: ['room'],
+        });
+
+        if (!confirmedBooking) {
+            throw new BadRequestException(
+                'Bạn cần có đơn đặt phòng đã thanh toán thành công để đánh giá chủ nhà'
+            );
+        }
+
+        // Kiểm tra phòng của booking có thuộc về host này không
+        const roomBelongsToHost = await this.bookingRepo
+            .createQueryBuilder('booking')
+            .innerJoin('booking.room', 'room')
+            .where('booking.renter_id = :renterId', { renterId: reviewerId })
+            .andWhere('booking.status = :status', { status: BookingStatus.CONFIRMED })
+            .andWhere('room.host_id = :hostId', { hostId })
+            .getOne();
+
+        if (!roomBelongsToHost) {
+            throw new BadRequestException(
+                'Bạn chỉ có thể đánh giá chủ nhà mà bạn đã thuê phòng và thanh toán thành công'
+            );
         }
 
         const review = this.reviewRepo.create({
@@ -57,20 +93,19 @@ export class UserReviewService {
 
         try {
             const savedReview = await this.reviewRepo.save(review);
-            await this.updateHostRating(hostId); // Cập nhật (tính avg) ở table user trước khi trả về
+            await this.updateHostRating(hostId);
             return savedReview;
-        } catch (error) { // Phòng lỗi user đánh giá 2 lần cho 1 host gây sập database
+        } catch (error) {
             if (
             error instanceof QueryFailedError &&
             (error as any).code === '23505'
             ) {
                 throw new ConflictException(
-                    'You have already reviewed this host',
+                    'Bạn đã đánh giá chủ nhà này rồi',
                 );
             }
             throw error;
         }
-
     }
 
     //   async getReviewsByHost(hostId: number) {

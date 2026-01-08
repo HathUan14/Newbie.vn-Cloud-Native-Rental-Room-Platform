@@ -1,180 +1,147 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { Review } from './entities/review.entity';
-import { Transaction } from '../payment/entities/transaction.entity';
 import { Booking } from '../booking/entities/booking.entity';
-import { Room } from '../room/entities/room.entity';
-import { TransactionStatus, TransactionType } from '../payment/payment.constant';
 import { BookingStatus } from '../booking/booking.constant';
-import { HostStatsDto } from './dto/host-stats.dto';
-import { ChartDataDto } from './dto/chart-data.dto';
-import { TopListingDto } from './dto/top-listing.dto';
 
 @Injectable()
 export class ReviewService {
   constructor(
     @InjectRepository(Review)
     private readonly reviewRepository: Repository<Review>,
-    @InjectRepository(Transaction)
-    private readonly transactionRepository: Repository<Transaction>,
     @InjectRepository(Booking)
     private readonly bookingRepository: Repository<Booking>,
-    @InjectRepository(Room)
-    private readonly roomRepository: Repository<Room>,
   ) {}
 
-  create(createReviewDto: CreateReviewDto) {
-    return 'This action adds a new review';
-  }
-
-  findAll() {
-    return `This action returns all review`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} review`;
-  }
-
-  update(id: number, updateReviewDto: UpdateReviewDto) {
-    return `This action updates a #${id} review`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} review`;
-  }
-
   /**
-   * Lấy thống kê tổng quan cho chủ nhà
+   * Tạo review mới cho một booking
+   * @param renterId - ID của người thuê (từ JWT)
+   * @param createReviewDto - DTO chứa bookingId, rating, comment
+   * @returns Review đã tạo
    */
-  async getHostStats(hostId: number): Promise<HostStatsDto> {
-    // Lấy danh sách roomIds của host
-    const hostRooms = await this.roomRepository.find({
-      where: { hostId },
-      select: ['id'],
-    });
-    const roomIds = hostRooms.map((room) => room.id);
+  async create(renterId: number, createReviewDto: CreateReviewDto): Promise<Review> {
+    const { bookingId, rating, comment } = createReviewDto;
 
-    // Tính tổng doanh thu từ Transaction
-    const totalRevenueResult = await this.transactionRepository
-      .createQueryBuilder('transaction')
-      .innerJoin('transaction.booking', 'booking')
-      .where('booking.room_id IN (:...roomIds)', { roomIds })
-      .andWhere('transaction.status = :status', { status: TransactionStatus.SUCCESS })
-      .andWhere('transaction.type = :type', { type: TransactionType.DEPOSIT })
-      .select('SUM(transaction.amount)', 'total')
-      .getRawOne();
-      
-    const totalRevenue = Number(totalRevenueResult?.total || 0);
-
-    // Tính tổng số lượt xem phòng (viewingRequests)
-    const viewingRequestsResult = await this.roomRepository
-      .createQueryBuilder('room')
-      .where('room.host_id = :hostId', { hostId })
-      .select('SUM(room.total_views)', 'total')
-      .getRawOne();
-
-    const viewingRequests = Number(viewingRequestsResult?.total || 0);
-
-    // Đếm tổng số booking thành công
-    const totalBookings = await this.bookingRepository.count({
-      where: {
-        roomId: roomIds.length > 0 ? roomIds[0] : undefined,
-        status: BookingStatus.CONFIRMED,
-      },
+    // Kiểm tra booking tồn tại và thuộc về renter
+    const booking = await this.bookingRepository.findOne({
+      where: { id: bookingId, renterId },
     });
 
-    // Tính conversion rate
-    const conversionRate = viewingRequests > 0 
-      ? (totalBookings / viewingRequests) * 100 
-      : 0;
-
-    return {
-      totalRevenue,
-      viewingRequests,
-      conversionRate: Number(conversionRate.toFixed(2)),
-    };
-  }
-
-  /**
-   * Lấy dữ liệu biểu đồ doanh thu theo tháng
-   */
-  async getRevenueChartData(hostId: number, year: number): Promise<ChartDataDto> {
-    // Lấy danh sách roomIds của host
-    const hostRooms = await this.roomRepository.find({
-      where: { hostId },
-      select: ['id'],
-    });
-    const roomIds = hostRooms.map((room) => room.id);
-
-    if (roomIds.length === 0) {
-      return {
-        labels: [],
-        values: [],
-      };
+    if (!booking) {
+      throw new NotFoundException('Booking không tồn tại hoặc không thuộc về bạn');
     }
 
-    // Truy vấn doanh thu theo tháng
-    const revenueData = await this.transactionRepository
-      .createQueryBuilder('transaction')
-      .innerJoin('transaction.booking', 'booking')
-      .where('booking.room_id IN (:...roomIds)', { roomIds })
-      .andWhere('transaction.status = :status', { status: TransactionStatus.SUCCESS })
-      .andWhere('transaction.type = :type', { type: TransactionType.DEPOSIT })
-      .andWhere('EXTRACT(YEAR FROM transaction.created_at) = :year', { year })
-      .select('EXTRACT(MONTH FROM transaction.created_at)', 'month')
-      .addSelect('SUM(transaction.amount)', 'total')
-      .groupBy('month')
-      .orderBy('month', 'ASC')
-      .getRawMany();
+    // Kiểm tra booking đã hoàn thành (CONFIRMED = đã thanh toán = hoàn thành)
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      throw new BadRequestException('Chỉ có thể đánh giá booking đã xác nhận');
+    }
 
-    // Tạo mảng 12 tháng
-    const monthLabels = [
-      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4',
-      'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8',
-      'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-    ];
-    
-    const monthValues = new Array(12).fill('0');
-
-    // Fill dữ liệu vào đúng tháng
-    revenueData.forEach((row) => {
-      const monthIndex = parseInt(row.month) - 1;
-      monthValues[monthIndex] = row.total || '0';
+    // Kiểm tra đã review chưa
+    const existingReview = await this.reviewRepository.findOne({
+      where: { bookingId, renterId },
     });
 
-    return {
-      labels: monthLabels,
-      values: monthValues,
-    };
+    if (existingReview) {
+      throw new BadRequestException('Bạn đã đánh giá booking này rồi');
+    }
+
+    // Tạo review mới
+    const review = this.reviewRepository.create({
+      bookingId,
+      renterId,
+      roomId: booking.roomId,
+      rating,
+      comment,
+    });
+
+    return this.reviewRepository.save(review);
   }
 
   /**
-   * Lấy danh sách phòng hiệu quả nhất của host
+   * Lấy tất cả reviews
    */
-  async getTopListings(hostId: number, limit: number = 5): Promise<TopListingDto[]> {
-    const topRooms = await this.roomRepository
-      .createQueryBuilder('room')
-      .leftJoin('bookings', 'booking', 'booking.room_id = room.room_id')
-      .where('room.host_id = :hostId', { hostId })
-      .select('room.room_id', 'roomId')
-      .addSelect('room.title', 'roomName')
-      .addSelect('room.total_views', 'totalViews')
-      .addSelect('COUNT(booking.id)', 'totalBookings')
-      .groupBy('room.room_id')
-      .addGroupBy('room.title')
-      .addGroupBy('room.total_views')
-      .orderBy('room.total_views', 'DESC')
-      .limit(limit)
-      .getRawMany();
+  findAll(): Promise<Review[]> {
+    return this.reviewRepository.find({
+      relations: ['renter', 'room'],
+      order: { createdAt: 'DESC' },
+    });
+  }
 
-    return topRooms.map((row) => ({
-      roomId: row.roomId,
-      roomName: row.roomName,
-      totalViews: parseInt(row.totalViews) || 0,
-      totalBookings: parseInt(row.totalBookings) || 0,
-    }));
+  /**
+   * Lấy review theo ID
+   */
+  async findOne(id: number): Promise<Review> {
+    const review = await this.reviewRepository.findOne({
+      where: { id },
+      relations: ['renter', 'room'],
+    });
+
+    if (!review) {
+      throw new NotFoundException(`Review #${id} không tồn tại`);
+    }
+
+    return review;
+  }
+
+  /**
+   * Cập nhật review
+   */
+  async update(id: number, renterId: number, updateReviewDto: UpdateReviewDto): Promise<Review> {
+    const review = await this.reviewRepository.findOne({
+      where: { id, renterId },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Review không tồn tại hoặc không thuộc về bạn');
+    }
+
+    Object.assign(review, updateReviewDto);
+    return this.reviewRepository.save(review);
+  }
+
+  /**
+   * Xóa review
+   */
+  async remove(id: number, renterId: number): Promise<void> {
+    const review = await this.reviewRepository.findOne({
+      where: { id, renterId },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Review không tồn tại hoặc không thuộc về bạn');
+    }
+
+    await this.reviewRepository.remove(review);
+  }
+
+  /**
+   * Lấy danh sách reviews theo roomId
+   * @param roomId - ID của phòng
+   * @returns Mảng Review của phòng đó
+   */
+  async getByRoom(roomId: number): Promise<Review[]> {
+    return this.reviewRepository.find({
+      where: { roomId },
+      relations: ['renter'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Tính điểm đánh giá trung bình của phòng
+   * @param roomId - ID của phòng
+   * @returns Điểm trung bình (0 nếu chưa có review)
+   */
+  async getAverageRating(roomId: number): Promise<number> {
+    const result = await this.reviewRepository
+      .createQueryBuilder('review')
+      .where('review.room_id = :roomId', { roomId })
+      .select('AVG(review.rating)', 'avgRating')
+      .getRawOne();
+
+    return Number(result?.avgRating || 0);
   }
 }

@@ -5,7 +5,7 @@ import { BookingController } from './booking.controller';
 import { AuthModule } from '../auth/auth.module';
 import { MailModule } from '../mail/mail.module';
 import { Booking } from './entities/booking.entity';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 import { Room } from '../room/entities/room.entity';
 @Module({
   imports: [

@@ -42,7 +42,7 @@ export default function Home() {
 
   const fetchFeaturedRooms = async () => {
     try {
-      const response = await fetch("http://localhost:3000/rooms?limit=8&sort=createdAt:DESC");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms?limit=8&sort=createdAt:DESC`);
       const result = await response.json();
 
       if (result.success && result.data) {

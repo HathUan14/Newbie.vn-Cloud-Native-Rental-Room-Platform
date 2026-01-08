@@ -6,6 +6,7 @@ import { CreatePaymentUrlDto } from './interfaces/payment-gateway.interface';
 import { Transaction } from './entities/transaction.entity';
 import { TransactionStatus, TransactionType, PaymentMethod } from './payment.constant';
 import { BookingService } from '../booking/booking.service';
+import { TransactionFilterDto } from './dto/transaction-filter.dto';
 
 @Injectable()
 export class PaymentService {
@@ -157,4 +158,44 @@ export class PaymentService {
   //     vnpayTransactionNo,
   //   );
   // }
+
+  /**
+   * L?y danh s�ch transactions c?a user v?i filter
+   */
+  async getTransactions(
+    userId: number,
+    filter: TransactionFilterDto,
+  ): Promise<Transaction[]> {
+    const query = this.transactionRepo
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.booking', 'booking')
+      .where('transaction.userId = :userId', { userId })
+      .orderBy('transaction.createdAt', 'DESC');
+
+    if (filter.startDate) {
+      query.andWhere('transaction.createdAt >= :startDate', {
+        startDate: filter.startDate,
+      });
+    }
+
+    if (filter.endDate) {
+      query.andWhere('transaction.createdAt <= :endDate', {
+        endDate: filter.endDate,
+      });
+    }
+
+    if (filter.status) {
+      query.andWhere('transaction.status = :status', {
+        status: filter.status,
+      });
+    }
+
+    if (filter.type) {
+      query.andWhere('transaction.type = :type', {
+        type: filter.type,
+      });
+    }
+
+    return await query.getMany();
+  }
 }

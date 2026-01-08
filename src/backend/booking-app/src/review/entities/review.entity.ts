@@ -6,7 +6,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/user.entity';
+import { User } from '../../user/user.entity';
 import { Booking } from '../../booking/entities/booking.entity';
 import { Room } from '../../room/entities/room.entity';
 

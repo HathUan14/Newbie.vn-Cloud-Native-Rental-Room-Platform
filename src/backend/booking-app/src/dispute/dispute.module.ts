@@ -4,7 +4,7 @@ import { DisputeController } from './dispute.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Dispute } from './entities/dispute.entity';
 import { Booking } from '../booking/entities/booking.entity';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 import { PaymentModule } from '../payment/payment.module';
 import { MailModule } from '../mail/mail.module';
 import { Room } from '../room/entities/room.entity';

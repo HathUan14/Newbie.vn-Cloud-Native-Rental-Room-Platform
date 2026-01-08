@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Lexend, Inter, Roboto_Mono, Manrope} from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast";
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 
 const inter = Inter({
@@ -45,13 +44,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Toaster position="top-center" />
-          <div className="flex flex-col min-h-screen">
-            <Navbar/>
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
         </AuthProvider>
       </body>
     </html>

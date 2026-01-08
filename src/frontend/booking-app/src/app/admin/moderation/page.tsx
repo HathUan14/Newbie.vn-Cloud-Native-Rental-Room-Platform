@@ -147,28 +147,15 @@ export default function ModerationPage() {
         message: string;
     }>({ isOpen: false, type: 'success', title: '', message: '' });
 
-    // Kiểm tra quyền Admin
+    // Fetch danh sách Pending khi mount (auth đã được kiểm tra ở layout)
     useEffect(() => {
-        if (!authLoading) {
-            if (!user) {
-                router.push('/login');
-            } else if (user.isAdmin !== true || user.isHost === true) {
-                router.push('/');
-            }
-        }
-    }, [user, authLoading, router]);
-
-    // 1. Fetch danh sách Pending khi mount
-    useEffect(() => {
-        if (user?.isAdmin === true && user.isHost !== true) {
-            fetchPendingRooms();
-        }
-    }, [user]);
+        fetchPendingRooms();
+    }, []);
 
     const fetchPendingRooms = async () => {
         try {
             setIsLoading(true);
-            const res = await fetch('http://localhost:3000/rooms/pending');
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/pending`);
             const data = await res.json();
             if (data.success) {
                 setListings(data.data);
@@ -184,7 +171,7 @@ export default function ModerationPage() {
     const handleReview = async (id: number) => {
         try {
             setIsDetailLoading(true);
-            const res = await fetch(`http://localhost:3000/rooms/admin-detail/${id}`);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/admin-detail/${id}`);
             const data = await res.json();
             if (data.success) {
                 setSelectedListing(data.data);
@@ -243,7 +230,7 @@ export default function ModerationPage() {
         try {
             setIsSubmitting(true);
 
-            const response = await fetch(`http://localhost:3000/rooms/${selectedListing.id}/moderation`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms/${selectedListing.id}/moderation`, {
                 method: 'PATCH',
                 credentials: 'include', // Tự động gửi cookie
                 headers: {
@@ -294,7 +281,7 @@ export default function ModerationPage() {
     };
 
     // --- LOADING STATE ---
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 text-slate-500 gap-2">
                 <Loader2 className="animate-spin" /> Đang tải dữ liệu...
@@ -360,7 +347,7 @@ export default function ModerationPage() {
         const config = typeConfig[notifyModal.type];
         
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setNotifyModal({ ...notifyModal, isOpen: false })}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30  animate-in fade-in duration-200" onClick={() => setNotifyModal({ ...notifyModal, isOpen: false })}>
                 <div className="bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4 animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
                     <div className="p-6">
                         <div className={`w-12 h-12 rounded-full ${config.iconBg} flex items-center justify-center mb-4 ${config.iconColor}`}>
@@ -388,24 +375,40 @@ export default function ModerationPage() {
             <>
                 <ConfirmModal />
                 <NotifyModal />
-                <div className="min-h-screen bg-slate-50 p-6 lg:p-8 font-sans text-slate-800">
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold text-slate-900">Kiểm duyệt tin đăng</h1>
-                        <p className="text-sm text-slate-500 mt-1">{listings.length} tin đang chờ xử lý</p>
+                <div className="min-h-screen bg-slate-50">
+                {/* Header */}
+                <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+                    <div className="px-6 lg:px-8 py-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 flex items-center gap-3">
+                                    <Home className="w-8 h-8 text-amber-600" />
+                                    Kiểm duyệt tin đăng
+                                </h1>
+                                <p className="text-sm text-slate-500 mt-1">{listings.length} tin đang chờ xử lý</p>
+                            </div>
+                            <button
+                                onClick={fetchPendingRooms}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition font-medium"
+                            >
+                                <Loader2 className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                                <span className="hidden sm:inline">Làm mới</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div className="px-6 lg:px-8 py-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-100 border-b border-slate-200">
+                        <thead className="bg-slate-50 border-b border-slate-200">
                             <tr>
-                                <th className="px-4 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Tin đăng</th>
-                                <th className="px-4 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Thông số</th>
-                                <th className="px-4 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Giá</th>
-                                <th className="px-4 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Chủ nhà</th>
-                                <th className="px-4 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide">Ngày đăng</th>
-                                <th className="px-4 py-3 text-xs font-semibold text-slate-700 uppercase tracking-wide text-right">Thao tác</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wide">Tin đăng</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wide hidden lg:table-cell">Thông số</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wide">Giá</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wide hidden md:table-cell">Chủ nhà</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wide hidden sm:table-cell">Ngày đăng</th>
+                                <th className="px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wide text-right">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -414,49 +417,49 @@ export default function ModerationPage() {
                                 const thumb = room.images.find(img => img.isThumbnail)?.imageUrl || room.images[0]?.imageUrl || '/placeholder.png';
 
                                 return (
-                                    <tr key={room.id} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
-                                        <td className="px-4 py-4">
+                                    <tr key={room.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="px-6 py-4">
                                             <div className="flex gap-3 items-center">
-                                                <img src={thumb} alt="thumb" className="w-14 h-14 rounded-md object-cover bg-slate-100 border border-slate-200" />
+                                                <img src={thumb} alt="thumb" className="w-14 h-14 rounded-xl object-cover bg-slate-100 border border-slate-200" />
                                                 <div>
                                                     <p className="font-semibold text-slate-900 line-clamp-1 max-w-[250px]">{room.title}</p>
-                                                    <div className="flex items-center text-l text-slate-500 mt-1">
+                                                    <div className="flex items-center text-sm text-slate-500 mt-1">
                                                         <MapPin size={16} className="mr-1" />
                                                         {room.district}, {room.city}
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-4 hidden lg:table-cell">
                                             <div className="flex flex-col gap-1 items-start">
-                                                <span className="text-l text-slate-500 mt-1">
+                                                <span className="text-sm text-slate-600">
                                                     {room.area}m² • {room.guestCapacity} người
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="p-4">
-                                            <p className="font-bold texl-l text-slate-900">{formatCurrency(room.pricePerMonth)}</p>
+                                        <td className="px-6 py-4">
+                                            <p className="font-bold text-slate-900">{formatCurrency(room.pricePerMonth)}</p>
                                         </td>
-                                        <td className="p-4">
+                                        <td className="px-6 py-4 hidden md:table-cell">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-l font-bold overflow-hidden">
-                                                    {room.host.avatarUrl ? <img src={room.host.avatarUrl} alt="avt" /> : room.host.fullName.charAt(0)}
+                                                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold overflow-hidden">
+                                                    {room.host.avatarUrl ? <img src={room.host.avatarUrl} alt="avt" className="w-full h-full object-cover" /> : room.host.fullName.charAt(0)}
                                                 </div>
-                                                <div className="text-l">
+                                                <div className="text-sm">
                                                     <p className="font-medium text-slate-900">{room.host.fullName}</p>
-                                                    <p className="text-slate-500 text-l">{room.host.phoneNumber}</p>
+                                                    <p className="text-slate-500 text-xs">{room.host.phoneNumber}</p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="p-4 text-l text-slate-500">{formatDate(room.createdAt)}</td>
-                                        <td className="px-4 py-4 text-right">
+                                        <td className="px-6 py-4 text-sm text-slate-500 hidden sm:table-cell">{formatDate(room.createdAt)}</td>
+                                        <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => handleReview(room.id)}
                                                 disabled={isDetailLoading}
-                                                className="px-3 py-1.5 rounded text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-4 py-2 rounded-lg text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {isDetailLoading ? <Loader2 size={14} className="animate-spin" /> : <Eye size={14} />}
-                                                Xem chi tiết
+                                                Xem xét
                                             </button>
                                         </td>
                                     </tr>
@@ -464,14 +467,17 @@ export default function ModerationPage() {
                             })}
                             {listings.length === 0 && !isLoading && (
                                 <tr>
-                                    <td colSpan={6} className="p-12 text-center text-slate-400">
-                                        Hiện không có tin đăng nào cần duyệt.
+                                    <td colSpan={6} className="p-16 text-center">
+                                        <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                                        <p className="text-slate-600 font-medium">Không có tin nào chờ duyệt</p>
+                                        <p className="text-sm text-slate-400">Tất cả đã được xử lý</p>
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
             </>
         );

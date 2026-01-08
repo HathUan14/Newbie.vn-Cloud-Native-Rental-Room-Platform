@@ -1,78 +1,124 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { useEffect, useState, Suspense } from "react";
+import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<"pending" | "success" | "error">(
-    "pending"
-  );
-  const [message, setMessage] = useState("Đang xác thực...");
+  const [status, setStatus] = useState<"pending" | "success" | "error">("pending");
+  const [message, setMessage] = useState("Đang xác thực email của bạn...");
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("Token không tồn tại!");
+      setMessage("Link xác thực không hợp lệ hoặc đã hết hạn.");
       return;
     }
 
-    fetch("http://localhost:3000/auth/verify-email", {
+    fetch(`${API_URL}/auth/verify-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
     })
       .then((res) => res.json())
       .then((data) => {
-        setStatus(data.success ? "success" : "error");
-        setMessage(data.message);
+        if (data.success) {
+          setStatus("success");
+          setMessage("Email của bạn đã được xác thực thành công!");
+        } else {
+          setStatus("error");
+          setMessage(data.message || "Xác thực thất bại. Vui lòng thử lại.");
+        }
       })
       .catch(() => {
         setStatus("error");
-        setMessage("Xác thực thất bại");
+        setMessage("Có lỗi xảy ra. Vui lòng thử lại sau.");
       });
-  }, [token]);
-
-  const getIcon = () => {
-    switch (status) {
-      case "success":
-        return <CheckCircle className="w-12 h-12 text-green-600" />;
-      case "error":
-        return <XCircle className="w-12 h-12 text-red-600" />;
-      default:
-        return <Clock className="w-12 h-12 text-gray-500 animate-spin" />;
-    }
-  };
+  }, [token, API_URL]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="bg-white rounded-xl shadow-md p-8 max-w-sm w-full text-center">
-        <div className="mb-4 flex justify-center">{getIcon()}</div>
-        <h1 className="text-xl font-semibold mb-2">
-          {status === "success" && "Xác thực thành công"}
-          {status === "error" && "Xác thực thất bại"}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4 py-12">
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-gray-100">
+        {/* Icon */}
+        <div className="mb-6 flex justify-center">
+          {status === "pending" && (
+            <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+            </div>
+          )}
+          {status === "success" && (
+            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+          )}
+          {status === "error" && (
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+              <XCircle className="w-10 h-10 text-red-600" />
+            </div>
+          )}
+        </div>
+
+        {/* Title */}
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
           {status === "pending" && "Đang xác thực..."}
+          {status === "success" && "Xác thực thành công!"}
+          {status === "error" && "Xác thực thất bại"}
         </h1>
-        <p className="text-gray-600 mb-6">{message}</p>
+
+        {/* Message */}
+        <p className="text-gray-500 mb-8">{message}</p>
+
+        {/* Actions */}
         {status === "success" && (
-          <a
-            href="/dashboard"
-            className="inline-block bg-gray-800 hover:bg-gray-900 text-white px-5 py-2 rounded-md font-medium transition"
-          >
-            Về trang quản lý
-          </a>
+          <div className="space-y-3">
+            <Link
+              href="/login"
+              className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition"
+            >
+              Đăng nhập ngay
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="text-sm text-gray-400">
+              Bạn có thể đăng nhập và bắt đầu sử dụng dịch vụ
+            </p>
+          </div>
         )}
+
         {status === "error" && (
-          <a
-            href="/resend-verification"
-            className="inline-block bg-gray-800 hover:bg-gray-900 text-white px-5 py-2 rounded-md font-medium transition"
-          >
-            Gửi lại email
-          </a>
+          <div className="space-y-3">
+            <Link
+              href="/login"
+              className="flex items-center justify-center gap-2 w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-medium transition"
+            >
+              <Mail className="w-4 h-4" />
+              Về trang đăng nhập
+            </Link>
+          </div>
+        )}
+
+        {status === "pending" && (
+          <p className="text-sm text-gray-400">
+            Vui lòng đợi trong giây lát...
+          </p>
         )}
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

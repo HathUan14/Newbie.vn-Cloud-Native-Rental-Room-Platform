@@ -1,6 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 
 export enum ModerationStatus {
   APPROVED = 'APPROVED',
@@ -206,6 +206,20 @@ export class MailService {
         refundAmount: refundAmount,
         reason: reason,
         actionUrl: 'http://localhost:3001/dashboard/host-bookings',
+      },
+    });
+  }
+
+  async sendPasswordReset(user: User, token: string) {
+    const url = `http://localhost:3001/reset-password?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Yêu cầu đặt lại mật khẩu',
+      template: './reset-password',
+      context: {
+        name: user.fullName,
+        url,
       },
     });
   }

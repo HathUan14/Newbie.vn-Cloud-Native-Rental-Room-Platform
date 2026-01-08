@@ -21,7 +21,12 @@ const LoginPage: React.FC = () => {
 
   React.useEffect(() => {
     if (user) {
-      router.replace("/");
+      // Admin tự động chuyển đến trang admin
+      if (user.isAdmin && !user.isHost) {
+        router.replace("/admin");
+      } else {
+        router.replace("/");
+      }
     }
   }, [user, router]);
 
@@ -53,7 +58,12 @@ const LoginPage: React.FC = () => {
       if (response.ok) {
         setUser(result.data);
 
-        router.replace("/");
+        // Admin tự động chuyển đến trang admin
+        if (result.data.isAdmin && !result.data.isHost) {
+          router.replace("/admin");
+        } else {
+          router.replace("/");
+        }
       } else {
         setError(result.error || "Login failed");
       }
@@ -195,7 +205,7 @@ const LoginPage: React.FC = () => {
 
           <button
             onClick={() =>
-    window.location.href = 'http://localhost:3000/auth/google'}
+              window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
             disabled={loading}
             className="w-full py-4 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:transform-none flex items-center justify-center"
           >

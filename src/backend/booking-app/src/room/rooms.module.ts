@@ -7,7 +7,7 @@ import { Room } from './entities/room.entity';
 import { RoomImage } from './entities/room-image.entity'; 
 import { RoomAmenity } from './entities/room-amenity.entity';
 import { Amenity } from './entities/amenity.entity'; 
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { AuthModule } from '../auth/auth.module';
 import { MailModule } from '../mail/mail.module';

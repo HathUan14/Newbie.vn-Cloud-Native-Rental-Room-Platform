@@ -9,7 +9,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { Booking } from '../../booking/entities/booking.entity';
-import { User } from '../../users/user.entity';
+import { User } from '../../user/user.entity';
 import { DisputeStatus } from '../dispute.constant';
 
 export { DisputeStatus };

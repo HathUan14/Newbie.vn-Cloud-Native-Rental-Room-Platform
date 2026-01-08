@@ -47,7 +47,7 @@ async findOne(bookingId: number): Promise<Booking> {
   async getMyBookings(renterId: number): Promise<Booking[]> {
     return await this.bookingRepo.find({
       where: { renterId },
-      relations: ['room', 'room.images', 'renter', 'dispute'],
+      relations: ['room', 'room.images', 'room.host', 'renter', 'dispute'],
       order: { createdAt: 'DESC' }
     });
   }

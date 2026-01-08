@@ -4,7 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Room, ModerationStatus, RoomStatus } from './entities/room.entity';
 import { RoomImage } from './entities/room-image.entity';
 import { RoomAmenity } from './entities/room-amenity.entity';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 import { FilterRoomDto } from './dto/filter-room.dto';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { ModerateRoomDto } from './dto/moderate-room.dto';

@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 
-export default function LoginSuccess() {
+function LoginSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -16,4 +16,12 @@ export default function LoginSuccess() {
   }, [router, searchParams]);
 
   return <p>Đang đăng nhập...</p>;
+}
+
+export default function LoginSuccess() {
+  return (
+    <Suspense fallback={<p>Đang tải...</p>}>
+      <LoginSuccessContent />
+    </Suspense>
+  );
 }

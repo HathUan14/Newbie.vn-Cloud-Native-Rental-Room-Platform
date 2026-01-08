@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import SearchResultCard from '@/components/SearchResultCard';
 import PriceFilter from '@/components/Filters/PriceFilter';
@@ -12,7 +12,7 @@ import GenderFilter from '@/components/Filters/GenderFilter';
 import SortDropdown from '@/components/Filters/SortDropdown';
 import { SearchFilters, Room } from '@/types/search';
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -94,7 +94,7 @@ export default function SearchPage() {
         ward: filters.location.ward
       });
 
-      const response = await fetch(`http://localhost:3000/rooms?${queryParams}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms?${queryParams}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -339,5 +339,17 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }

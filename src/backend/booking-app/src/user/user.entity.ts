@@ -78,6 +78,13 @@ export class User {
   })
   isActive: boolean;
 
+  @Column({
+    name: 'lock_reason',
+    type: 'text',
+    nullable: true,
+  })
+  lockReason: string;
+
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamptz',

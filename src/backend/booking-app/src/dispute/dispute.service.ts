@@ -7,12 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { CreateDisputeDto } from './dto/create-dispute.dto';
-import { UpdateDisputeDto } from './dto/update-dispute.dto';
 import { ResolveDisputeDto } from './dto/resolve-dispute.dto';
 import { Dispute, DisputeStatus } from './entities/dispute.entity';
 import { Booking } from '../booking/entities/booking.entity';
 import { BookingStatus } from '../booking/booking.constant';
-import { User } from '../users/user.entity';
+import { User } from '../user/user.entity';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
 import { Room } from '../room/entities/room.entity';
