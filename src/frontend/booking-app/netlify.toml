@@ -11,10 +11,10 @@
 
 # Environment variables (thay thế bằng URL backend thực tế của bạn)
 [context.production.environment]
-  NEXT_PUBLIC_API_URL = "https://your-backend-api.com"
+  NEXT_PUBLIC_API_URL = https://introduction-se.onrender.com
 
 [context.deploy-preview.environment]
-  NEXT_PUBLIC_API_URL = "https://your-backend-api.com"
+  NEXT_PUBLIC_API_URL = https://introduction-se.onrender.com
 
 # Headers cho CORS và security
 [[headers]]
