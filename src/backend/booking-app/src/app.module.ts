@@ -13,6 +13,7 @@ import { DisputeModule } from './dispute/dispute.module';
 import { ReviewModule } from './review/review.module';
 import { UserReviewModule } from './user-review/user-review.module';
 import { HostDashboardModule } from './dashboard/host-dashboard.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { HostDashboardModule } from './dashboard/host-dashboard.module';
     ReviewModule,
     UserReviewModule,
     HostDashboardModule,
+    AiModule,
   ],
 })
 export class AppModule { }

@@ -17,6 +17,7 @@ import 'leaflet/dist/leaflet.css';
 import DescriptionViewer from '@/components/DescriptionViewer';
 import { useAuth } from '@/contexts/AuthContext';
 import ReviewSection from './components/review/review-section';
+import { AiChatWidget } from '@/components/AiChat';
 
 // --- CONSTANTS & UTILS ---
 const ROOM_TYPE_LABELS: Record<string, string> = {
@@ -945,6 +946,13 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
           onClose={() => setShowBookingModal(false)}
         />
       )}
+
+      {/* AI Chat Widget - Auto open with room context */}
+      <AiChatWidget 
+        roomId={data.id} 
+        roomTitle={data.title} 
+        defaultOpen={true} 
+      />
 
       {/* IMAGE LIGHTBOX MODAL */}
       {

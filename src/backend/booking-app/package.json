@@ -22,6 +22,7 @@
     "seed": "ts-node -r tsconfig-paths/register src/database/seed/import-seed-data.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.2",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^11.1.7",
