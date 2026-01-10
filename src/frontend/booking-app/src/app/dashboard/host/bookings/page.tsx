@@ -9,22 +9,14 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Calendar,
-  MapPin,
   User,
   Phone,
-  Mail,
   CheckCircle,
   XCircle,
   Clock,
   AlertCircle,
   Home,
   RefreshCw,
-  MessageSquare,
-  Building2,
-  Filter,
-  Search,
-  ChevronDown,
-  DollarSign,
 } from 'lucide-react';
 
 interface Booking {
@@ -57,58 +49,46 @@ interface Booking {
 
 const STATUS_CONFIG = {
   PENDING: {
-    label: 'Chờ xét duyệt',
-    color: 'bg-amber-500',
-    bgLight: 'bg-amber-50',
-    textColor: 'text-amber-700',
-    borderColor: 'border-amber-200',
+    label: 'Chờ duyệt',
+    dot: 'bg-amber-500',
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
     icon: Clock,
-    description: 'Yêu cầu mới cần xem xét',
   },
   APPROVED: {
-    label: 'Đã chấp nhận',
-    color: 'bg-blue-500',
-    bgLight: 'bg-blue-50',
-    textColor: 'text-blue-700',
-    borderColor: 'border-blue-200',
+    label: 'Đã duyệt',
+    dot: 'bg-blue-500',
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
     icon: CheckCircle,
-    description: 'Đã chấp nhận, chờ thanh toán',
   },
   CONFIRMED: {
-    label: 'Đã xác nhận',
-    color: 'bg-blue-500',
-    bgLight: 'bg-blue-50',
-    textColor: 'text-blue-700',
-    borderColor: 'border-blue-200',
+    label: 'Hoàn tất',
+    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-700',
     icon: CheckCircle,
-    description: 'Đã thanh toán & xác nhận',
   },
   REJECTED: {
-    label: 'Đã từ chối',
-    color: 'bg-red-500',
-    bgLight: 'bg-red-50',
-    textColor: 'text-red-700',
-    borderColor: 'border-red-200',
+    label: 'Từ chối',
+    dot: 'bg-gray-400',
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
     icon: XCircle,
-    description: 'Đã từ chối yêu cầu',
   },
   CANCELLED_BY_RENTER: {
     label: 'Khách hủy',
-    color: 'bg-slate-500',
-    bgLight: 'bg-slate-50',
-    textColor: 'text-slate-700',
-    borderColor: 'border-slate-200',
+    dot: 'bg-gray-400',
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
     icon: XCircle,
-    description: 'Khách đã hủy yêu cầu',
   },
   CANCELLED_BY_HOST: {
     label: 'Đã hủy',
-    color: 'bg-orange-500',
-    bgLight: 'bg-orange-50',
-    textColor: 'text-orange-700',
-    borderColor: 'border-orange-200',
+    dot: 'bg-gray-400',
+    bg: 'bg-gray-100',
+    text: 'text-gray-600',
     icon: AlertCircle,
-    description: 'Bạn đã hủy booking',
   },
 };
 
@@ -223,71 +203,59 @@ export default function HostBookingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gray-50">
       <Toaster position="top-center" />
 
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 lg:px-8 py-5">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Yêu cầu thuê phòng</h1>
-              <p className="text-slate-500 mt-1">
+              <h1 className="text-xl font-semibold text-gray-900">Yêu cầu thuê phòng</h1>
+              <p className="text-sm text-gray-500 mt-0.5">
                 Xử lý các yêu cầu đặt phòng từ khách hàng
               </p>
             </div>
             <button
               onClick={fetchBookings}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition"
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
             >
               <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              <span>Làm mới</span>
             </button>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-amber-600" />
-                <span className="text-xs font-medium text-amber-700">Chờ duyệt</span>
-              </div>
-              <p className="text-2xl font-bold text-amber-900">{statusCounts.PENDING}</p>
+          {/* Mini Stats */}
+          <div className="flex items-center gap-6 mt-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-gray-600">Chờ duyệt</span>
+              <span className="font-semibold text-gray-900">{statusCounts.PENDING}</span>
             </div>
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-medium text-blue-700">Đã chấp nhận</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-900">{statusCounts.APPROVED}</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-gray-600">Đã duyệt</span>
+              <span className="font-semibold text-gray-900">{statusCounts.APPROVED}</span>
             </div>
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-              <div className="flex items-center gap-2 mb-1">
-                <Building2 className="w-4 h-4 text-blue-600" />
-                <span className="text-xs font-medium text-blue-700">Đã xác nhận</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-900">{statusCounts.CONFIRMED}</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-gray-600">Hoàn tất</span>
+              <span className="font-semibold text-gray-900">{statusCounts.CONFIRMED}</span>
             </div>
-            <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
-              <div className="flex items-center gap-2 mb-1">
-                <User className="w-4 h-4 text-purple-600" />
-                <span className="text-xs font-medium text-purple-700">Tổng yêu cầu</span>
-              </div>
-              <p className="text-2xl font-bold text-purple-900">{statusCounts.ALL}</p>
-            </div>
+            <div className="text-gray-400">|</div>
+            <span className="text-gray-500">Tổng: <span className="font-semibold text-gray-900">{statusCounts.ALL}</span></span>
           </div>
         </div>
       </div>
 
-      <div className="px-6 lg:px-8 py-6 space-y-6">
+      <div className="px-6 lg:px-8 py-6 space-y-4">
         {/* Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {[
             { key: 'ALL', label: 'Tất cả' },
             { key: 'PENDING', label: 'Chờ duyệt' },
-            { key: 'APPROVED', label: 'Đã chấp nhận' },
-            { key: 'CONFIRMED', label: 'Đã xác nhận' },
+            { key: 'APPROVED', label: 'Đã duyệt' },
+            { key: 'CONFIRMED', label: 'Hoàn tất' },
             { key: 'REJECTED', label: 'Từ chối' },
             { key: 'CANCELLED_BY_RENTER', label: 'Khách hủy' },
           ].map((status) => (
@@ -295,36 +263,33 @@ export default function HostBookingsPage() {
               key={status.key}
               onClick={() => setFilterStatus(status.key)}
               className={`
-                flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border
+                px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition
                 ${filterStatus === status.key
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'}
               `}
             >
               {status.label}
-              <span className={`
-                text-xs px-1.5 py-0.5 rounded-full
-                ${filterStatus === status.key ? 'bg-white/20' : 'bg-slate-100'}
-              `}>
-                {statusCounts[status.key as keyof typeof statusCounts] || 0}
-              </span>
+              {statusCounts[status.key as keyof typeof statusCounts] > 0 && (
+                <span className={`ml-1.5 ${filterStatus === status.key ? 'text-gray-400' : 'text-gray-400'}`}>
+                  {statusCounts[status.key as keyof typeof statusCounts]}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
         {/* Booking List */}
         {loading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm">
-                <div className="animate-pulse space-y-4">
-                  <div className="flex gap-4">
-                    <div className="w-32 h-24 bg-slate-200 rounded-xl" />
-                    <div className="flex-1 space-y-3">
-                      <div className="h-5 bg-slate-200 rounded w-3/4" />
-                      <div className="h-4 bg-slate-200 rounded w-1/2" />
-                      <div className="h-4 bg-slate-200 rounded w-2/3" />
-                    </div>
+              <div key={i} className="bg-white rounded-xl p-4 border border-gray-200">
+                <div className="animate-pulse flex gap-4">
+                  <div className="w-24 h-20 bg-gray-200 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                    <div className="h-3 bg-gray-200 rounded w-1/3" />
                   </div>
                 </div>
               </div>
@@ -332,20 +297,18 @@ export default function HostBookingsPage() {
           </div>
         ) : filteredBookings.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Home className="w-10 h-10 text-slate-400" />
-            </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">
+            <Home className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-900 font-medium">
               {filterStatus === 'ALL' ? 'Chưa có yêu cầu nào' : 'Không có yêu cầu'}
-            </h3>
-            <p className="text-slate-500">
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
               {filterStatus === 'ALL'
                 ? 'Các yêu cầu đặt phòng sẽ hiển thị tại đây'
                 : 'Thử thay đổi bộ lọc để xem các yêu cầu khác'}
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredBookings.map((booking) => (
               <BookingCard
                 key={booking.id}
@@ -364,47 +327,36 @@ export default function HostBookingsPage() {
 
       {/* Reject Modal */}
       {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Từ chối yêu cầu</h3>
-                <p className="text-sm text-slate-500">Vui lòng cho biết lý do</p>
-              </div>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-5">
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Từ chối yêu cầu</h3>
+            <p className="text-sm text-gray-500 mb-4">Vui lòng cho biết lý do từ chối</p>
 
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Nhập lý do từ chối (bắt buộc)..."
-              rows={4}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-slate-900 resize-none"
+              placeholder="Nhập lý do..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-gray-900 text-sm resize-none"
             />
 
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={() => {
                   setRejectModal(null);
                   setRejectReason('');
                 }}
                 disabled={processingId !== null}
-                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition disabled:opacity-50"
+                className="flex-1 px-4 py-2 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
                 onClick={handleReject}
                 disabled={processingId !== null || !rejectReason.trim()}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-xl transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg transition disabled:opacity-50 disabled:bg-gray-300"
               >
-                {processingId ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  'Xác nhận từ chối'
-                )}
+                {processingId ? 'Đang xử lý...' : 'Xác nhận'}
               </button>
             </div>
           </div>
@@ -425,14 +377,14 @@ function BookingCard({
   onReject: () => void;
   isProcessing: boolean;
 }) {
-  const statusConfig = STATUS_CONFIG[booking.status];
-  const StatusIcon = statusConfig.icon;
+  const config = STATUS_CONFIG[booking.status];
+  const isPending = booking.status === 'PENDING';
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition">
-      <div className="md:flex">
-        {/* Image */}
-        <div className="md:w-56 h-44 md:h-auto relative bg-slate-200 flex-shrink-0">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:border-gray-300 transition">
+      <div className="flex">
+        {/* Image - Compact */}
+        <div className="w-28 md:w-36 flex-shrink-0 relative bg-gray-100">
           {booking.room.images?.[0]?.imageUrl ? (
             <Image
               src={booking.room.images[0].imageUrl}
@@ -442,128 +394,92 @@ function BookingCard({
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <Home className="w-12 h-12 text-slate-400" />
+              <Home className="w-8 h-8 text-gray-300" />
             </div>
           )}
-          {/* Status Badge */}
-          <div className="absolute top-3 left-3">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white ${statusConfig.color} shadow-lg`}>
-              <StatusIcon className="w-3.5 h-3.5" />
-              {statusConfig.label}
-            </span>
-          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-5 md:p-6">
-          {/* Room Info */}
-          <Link
-            href={`/rooms/${booking.room.id}`}
-            className="text-lg font-bold text-slate-900 hover:text-blue-600 transition line-clamp-1 mb-2 block"
-          >
-            {booking.room.title}
-          </Link>
-          <div className="flex items-center gap-1.5 text-sm text-slate-500 mb-4">
-            <MapPin className="w-4 h-4 flex-shrink-0" />
-            <span className="line-clamp-1">
-              {booking.room.address}, {booking.room.district}, {booking.room.city}
+        <div className="flex-1 p-4 min-w-0">
+          {/* Top row: Title + Status */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <Link
+              href={`/rooms/${booking.room.id}`}
+              className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition line-clamp-1"
+            >
+              {booking.room.title}
+            </Link>
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.text} flex-shrink-0`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+              {config.label}
             </span>
           </div>
 
-          {/* Renter Info */}
-          <div className={`rounded-xl p-4 mb-4 border ${statusConfig.borderColor} ${statusConfig.bgLight}`}>
-            <h4 className={`text-xs font-semibold ${statusConfig.textColor} mb-3 uppercase tracking-wide`}>
-              Thông tin khách thuê
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <User className={`w-4 h-4 ${statusConfig.textColor} flex-shrink-0`} />
-                <div>
-                  <p className="text-xs text-slate-500">Họ tên</p>
-                  <p className="font-semibold text-slate-900">{booking.renter.fullName}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className={`w-4 h-4 ${statusConfig.textColor} flex-shrink-0`} />
-                <div>
-                  <p className="text-xs text-slate-500">Số điện thoại</p>
-                  <a
-                    href={`tel:${booking.renter.phoneNumber}`}
-                    className="font-semibold text-blue-600 hover:underline"
-                  >
-                    {booking.renter.phoneNumber}
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className={`w-4 h-4 ${statusConfig.textColor} flex-shrink-0`} />
-                <div>
-                  <p className="text-xs text-slate-500">Email</p>
-                  <p className="font-semibold text-slate-900 truncate">{booking.renter.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className={`w-4 h-4 ${statusConfig.textColor} flex-shrink-0`} />
-                <div>
-                  <p className="text-xs text-slate-500">Ngày dọn vào</p>
-                  <p className="font-semibold text-slate-900">
-                    {format(new Date(booking.moveInDate), 'dd/MM/yyyy', { locale: vi })}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* Address */}
+          <p className="text-xs text-gray-500 mb-3 line-clamp-1">
+            {booking.room.district}, {booking.room.city}
+          </p>
+
+          {/* Info Grid - Compact */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mb-3">
+            <span className="flex items-center gap-1 text-gray-600">
+              <User className="w-3.5 h-3.5" />
+              {booking.renter.fullName}
+            </span>
+            <a href={`tel:${booking.renter.phoneNumber}`} className="flex items-center gap-1 text-blue-600 hover:underline">
+              <Phone className="w-3.5 h-3.5" />
+              {booking.renter.phoneNumber}
+            </a>
+            <span className="flex items-center gap-1 text-gray-600">
+              <Calendar className="w-3.5 h-3.5" />
+              {format(new Date(booking.moveInDate), 'dd/MM/yyyy')}
+            </span>
           </div>
 
-          {/* Price Info */}
-          <div className="grid grid-cols-2 gap-3 mb-4 p-4 bg-slate-50 rounded-xl">
-            <div>
-              <p className="text-xs text-slate-500 mb-1">Giá thuê/tháng</p>
-              <p className="font-bold text-slate-900">{formatCurrency(booking.totalPrice)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 mb-1">Tiền cọc</p>
-              <p className="font-bold text-blue-600">{formatCurrency(booking.depositAmount)}</p>
-            </div>
+          {/* Price row */}
+          <div className="flex items-center gap-4 text-xs mb-3">
+            <span className="text-gray-500">
+              Giá: <span className="font-semibold text-gray-900">{formatCurrency(booking.totalPrice)}</span>
+            </span>
+            <span className="text-gray-500">
+              Cọc: <span className="font-semibold text-blue-600">{formatCurrency(booking.depositAmount)}</span>
+            </span>
           </div>
 
           {/* Reject/Cancel Reason */}
           {(booking.rejectReason || booking.cancelReason) && (
-            <div className="bg-red-50 border border-red-100 rounded-xl p-3 mb-4">
-              <p className="text-xs font-semibold text-red-900 mb-1">
-                {booking.rejectReason ? 'Lý do từ chối:' : 'Lý do hủy:'}
-              </p>
-              <p className="text-sm text-red-700">
-                {booking.rejectReason || booking.cancelReason}
-              </p>
-            </div>
+            <p className="text-xs text-gray-500 mb-3 bg-gray-50 px-2 py-1.5 rounded">
+              <span className="font-medium">{booking.rejectReason ? 'Lý do từ chối:' : 'Lý do hủy:'}</span>{' '}
+              {booking.rejectReason || booking.cancelReason}
+            </p>
           )}
 
-          {/* Action Buttons */}
-          {booking.status === 'PENDING' && (
-            <div className="flex gap-3">
+          {/* Actions for PENDING */}
+          {isPending && (
+            <div className="flex gap-2">
               <button
                 onClick={onApprove}
                 disabled={isProcessing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold rounded-xl transition"
+                className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white text-xs font-medium rounded-lg transition"
               >
-                <CheckCircle className="w-4 h-4" />
                 {isProcessing ? 'Đang xử lý...' : 'Chấp nhận'}
               </button>
               <button
                 onClick={onReject}
                 disabled={isProcessing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 font-semibold rounded-xl transition"
+                className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 disabled:opacity-50 text-xs font-medium rounded-lg transition"
               >
-                <XCircle className="w-4 h-4" />
                 Từ chối
               </button>
             </div>
           )}
 
-          {/* Timestamp */}
-          <p className="text-xs text-slate-500 mt-4 pt-4 border-t border-slate-100">
-            Yêu cầu lúc: {format(new Date(booking.createdAt), "dd/MM/yyyy 'lúc' HH:mm", { locale: vi })}
-          </p>
+          {/* Timestamp - only for non-pending */}
+          {!isPending && (
+            <p className="text-[11px] text-gray-400">
+              {format(new Date(booking.createdAt), "dd/MM/yyyy 'lúc' HH:mm", { locale: vi })}
+            </p>
+          )}
         </div>
       </div>
     </div>
