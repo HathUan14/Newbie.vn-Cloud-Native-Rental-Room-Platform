@@ -36,7 +36,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   private async generateTokens(user: User) {
     const payload = {
@@ -82,7 +82,7 @@ export class AuthService {
 
       await this.usersService.updateEmailVerified(decoded.userId);
 
-      return { message: 'Xác thực email thành công!' };
+      return { success: true, message: 'Xác thực email thành công!' };
     } catch (e) {
       throw new BadRequestException('Token không hợp lệ hoặc đã hết hạn!');
     }
@@ -227,55 +227,56 @@ export class AuthService {
     }
   }
   async googleLogin(googleUser: {
-  googleId: string;
-  email: string;
-  fullName: string;
-  avatarUrl: string;
-}) {
+    googleId: string;
+    email: string;
+    fullName: string;
+    avatarUrl: string;
+  }) {
 
-  let user = await this.usersRepository.findOne({
-    where: { googleId: googleUser.googleId },
-  });
-
-
-  if (!user) {
-    user = await this.usersRepository.findOne({
-      where: { email: googleUser.email 
-      },
+    let user = await this.usersRepository.findOne({
+      where: { googleId: googleUser.googleId },
     });
+
+
+    if (!user) {
+      user = await this.usersRepository.findOne({
+        where: {
+          email: googleUser.email
+        },
+      });
+    }
+
+    if (!user) {
+      user = this.usersRepository.create({
+        email: googleUser.email,
+        fullName: googleUser.fullName,
+        avatarUrl: googleUser.avatarUrl ?? await downloadAvatar(googleUser.avatarUrl),
+        googleId: googleUser.googleId,
+        authProvider: AuthProvider.GOOGLE,
+        isActive: false, // Vẫn phải xác thực số điện thoại thông qua
+      });
+      await this.usersRepository.save(user);
+    }
+
+    // Kiểm tra tài khoản có bị khóa không
+    if (user.lockReason) {
+      throw new UnauthorizedException(`Tài khoản đã bị khóa. Lý do: ${user.lockReason}`);
+    }
+
+    if (user.authProvider === AuthProvider.LOCAL && !user.googleId) {
+      user.googleId = googleUser.googleId;
+      user.authProvider = AuthProvider.GOOGLE;
+      user.avatarUrl ??= googleUser.avatarUrl;
+      await this.usersRepository.save(user);
+    }
+
+    const tokens = await this.generateTokens(user);
+
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      user,
+    };
   }
-
-  if (!user) {
-    user = this.usersRepository.create({
-      email: googleUser.email,
-      fullName: googleUser.fullName,
-      avatarUrl: googleUser.avatarUrl ?? await downloadAvatar(googleUser.avatarUrl),
-      googleId: googleUser.googleId,
-      authProvider: AuthProvider.GOOGLE,
-      isActive: false, // Vẫn phải xác thực số điện thoại thông qua
-    });
-    await this.usersRepository.save(user);
-  }
-
-  // Kiểm tra tài khoản có bị khóa không
-  if (user.lockReason) {
-    throw new UnauthorizedException(`Tài khoản đã bị khóa. Lý do: ${user.lockReason}`);
-  }
-
-  if (user.authProvider === AuthProvider.LOCAL && !user.googleId) {
-    user.googleId = googleUser.googleId;
-    user.authProvider = AuthProvider.GOOGLE;
-    user.avatarUrl ??= googleUser.avatarUrl;
-    await this.usersRepository.save(user);
-  }
-
-  const tokens = await this.generateTokens(user);
-
-  return {
-    access_token: tokens.access_token,
-    refresh_token: tokens.refresh_token,
-    user,
-  };
-}
 
 }
