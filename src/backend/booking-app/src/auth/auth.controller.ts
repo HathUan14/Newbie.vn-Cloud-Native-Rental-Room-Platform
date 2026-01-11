@@ -184,7 +184,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 7* 24* 60 * 60 * 1000, //Thọ 1 tuần
     });
-    return res.redirect(`http://localhost:3001/`);
+    return res.redirect(`${process.env.FRONTEND_URL}`);
   }
 
 }
