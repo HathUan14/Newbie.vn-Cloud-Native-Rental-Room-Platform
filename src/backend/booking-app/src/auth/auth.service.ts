@@ -61,23 +61,18 @@ export class AuthService {
 
   async sendVerificationEmail(userId: number) {
     const user = await this.usersService.findById(userId);
-
     if (!user) {
       throw new NotFoundException('User không tồn tại');
     }
-
     if (user.isActive) {
       return { message: 'Email của bạn đã được xác thực rồi' };
     }
-
     // tạo token 24h
     const token = this.jwtService.sign(
       { userId: user.id },
       { expiresIn: '24h' },
     );
-
     await this.mailService.sendUserConfirmation(user, token);
-
     return { message: 'Email xác thực đã được gửi' };
   }
 
