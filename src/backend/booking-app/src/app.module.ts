@@ -34,11 +34,11 @@ import { AiModule } from './ai/ai.module';
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, 
+        port: 465,
+        secure: true,   
         auth: {
-          user: 'nakrothnguyen127@gmail.com', 
-          pass: 'ldcv jqxm iewu qddu',    
+          user: process.env.MAIL_MODULE_USER, 
+          pass: process.env.MAIL_MODULE_PASS,    
         },
       },
       defaults: {
