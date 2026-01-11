@@ -51,13 +51,13 @@ export class MailService {
       case ModerationStatus.REJECTED:
         template = './listing-rejected';
         subject = 'Tin đăng bị từ chối';
-        link = `${frontendUrl}/dashboard/my-posts`;
+        link = `${frontendUrl}/dashboard/host/rooms`;
         break;
 
       case ModerationStatus.NEEDS_EDIT:
         template = './listing-needs-edit';
         subject = 'Yêu cầu chỉnh sửa tin đăng';
-        link = `${frontendUrl}/host/manage/rooms/${roomId}/edit`;
+        link = `${frontendUrl}/dashboard/host/rooms`;
         break;
     }
 
@@ -92,7 +92,7 @@ export class MailService {
         name: user.fullName,
         roomTitle: roomTitle,
         reason: reason,
-        actionUrl: `${process.env.FRONTEND_URL}/dashboard/my-bookings`,
+        actionUrl: `${process.env.FRONTEND_URL}/dashboard/bookings`,
       },
     });
   }
@@ -205,7 +205,7 @@ export class MailService {
         renterName: renterName,
         refundAmount: refundAmount,
         reason: reason,
-        actionUrl: `http://${process.env.FRONTEND_URL}/dashboard/host-bookings`,
+        actionUrl: `http://${process.env.FRONTEND_URL}/dashboard/host/rooms`,
       },
     });
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -12,7 +12,7 @@ function VerifyEmailContent() {
   const [message, setMessage] = useState("Đang xác thực email của bạn...");
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
+  const router = useRouter();
   useEffect(() => {
     if (!token) {
       setStatus("error");
@@ -30,6 +30,9 @@ function VerifyEmailContent() {
         if (data.success) {
           setStatus("success");
           setMessage("Email của bạn đã được xác thực thành công!");
+          setTimeout(() => {
+            router.push("/");
+          }, 3000);
         } else {
           setStatus("error");
           setMessage(data.message || "Xác thực thất bại. Vui lòng thử lại.");
@@ -76,15 +79,8 @@ function VerifyEmailContent() {
         {/* Actions */}
         {status === "success" && (
           <div className="space-y-3">
-            <Link
-              href="/login"
-              className="flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition"
-            >
-              Đăng nhập ngay
-              <ArrowRight className="w-4 h-4" />
-            </Link>
             <p className="text-sm text-gray-400">
-              Bạn có thể đăng nhập và bắt đầu sử dụng dịch vụ
+              Bạn có thể sử dụng toàn bộ tính năng của tài khoản ngay bây giờ.
             </p>
           </div>
         )}
