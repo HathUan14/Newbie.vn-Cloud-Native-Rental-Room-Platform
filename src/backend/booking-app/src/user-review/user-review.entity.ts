@@ -10,19 +10,6 @@ import {
 } from 'typeorm';
 import { User } from '../user/user.entity';
 
-// Luồng hoạt động:
-//
-// User gửi review
-//    ↓
-// Validate DTO
-//    ↓
-// Lưu user_reviews
-//    ↓
-// Tính AVG + COUNT (SQL)
-//    ↓
-// Update users.avg_rating + review_count
-//    ↓
-// Frontend load host → đọc cache (NHANH)
 
 @Entity({ name: 'user_reviews' })
 

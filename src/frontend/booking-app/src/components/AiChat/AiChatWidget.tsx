@@ -24,6 +24,7 @@ export default function AiChatWidget({ roomId, roomTitle, defaultOpen = false }:
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -31,6 +32,38 @@ export default function AiChatWidget({ roomId, roomTitle, defaultOpen = false }:
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Fetch initial suggestions when chat opens
+  useEffect(() => {
+    async function fetchInitialSuggestions() {
+      if (!isOpen || !roomId) {
+        // Default suggestions for general chat
+        setSuggestedQuestions([
+          'Quy trình thuê phòng?',
+          'Cần cọc bao nhiêu?',
+          'Quyền lợi người thuê?',
+          'Làm sao hủy đặt phòng?',
+        ]);
+        return;
+      }
+      try {
+        const res = await fetch(`${API_URL}/ai/suggestions?roomId=${roomId}`);
+        const data = await res.json();
+        if (data.success && data.data.suggestedQuestions) {
+          setSuggestedQuestions(data.data.suggestedQuestions);
+        }
+      } catch (err) {
+        console.error('Failed to fetch suggestions:', err);
+        setSuggestedQuestions([
+          'Tổng chi phí hàng tháng?',
+          'Phòng có tiện ích gì?',
+          'Đánh giá phòng thế nào?',
+          'Khu vực có an toàn không?',
+        ]);
+      }
+    }
+    fetchInitialSuggestions();
+  }, [isOpen, roomId]);
 
   // Focus input when chat opens
   useEffect(() => {
@@ -94,6 +127,11 @@ export default function AiChatWidget({ roomId, roomTitle, defaultOpen = false }:
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Cập nhật suggested questions từ response
+      if (data.success && data.data.suggestedQuestions?.length > 0) {
+        setSuggestedQuestions(data.data.suggestedQuestions);
+      }
     } catch (error) {
       console.error('AI Chat Error:', error);
       const errorMessage: Message = {
@@ -129,19 +167,12 @@ export default function AiChatWidget({ roomId, roomTitle, defaultOpen = false }:
     setMessages([welcomeMessage]);
   };
 
-  const quickQuestions = roomId
-    ? [
-        'Phòng này giá bao nhiêu?',
-        'Tính tổng chi phí hàng tháng',
-        'Có tiện ích gì?',
-        'Đánh giá thế nào?',
-      ]
-    : [
-        'Quy trình thuê phòng?',
-        'Cần cọc bao nhiêu?',
-        'Quyền lợi người thuê?',
-        'Làm sao hủy đặt phòng?',
-      ];
+  // Sử dụng suggestedQuestions từ API (dynamic)
+  const quickQuestions = suggestedQuestions.length > 0 
+    ? suggestedQuestions 
+    : (roomId
+        ? ['Tổng chi phí hàng tháng?', 'Có tiện ích gì?', 'Đánh giá thế nào?', 'Khu vực có an toàn không?']
+        : ['Quy trình thuê phòng?', 'Cần cọc bao nhiêu?', 'Quyền lợi người thuê?', 'Làm sao hủy đặt phòng?']);
 
   return (
     <>
@@ -292,10 +323,10 @@ export default function AiChatWidget({ roomId, roomTitle, defaultOpen = false }:
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Questions */}
-              {messages.length <= 1 && (
+              {/* Quick Questions - Hiển thị gợi ý động từ API */}
+              {quickQuestions.length > 0 && !isLoading && (
                 <div className="px-4 py-2 border-t border-gray-100 bg-white">
-                  <p className="text-xs text-gray-500 mb-2">Câu hỏi gợi ý:</p>
+                  <p className="text-xs text-gray-500 mb-2">💡 Gợi ý câu hỏi:</p>
                   <div className="flex flex-wrap gap-2">
                     {quickQuestions.map((question, index) => (
                       <button
@@ -304,7 +335,7 @@ export default function AiChatWidget({ roomId, roomTitle, defaultOpen = false }:
                           setInputValue(question);
                           inputRef.current?.focus();
                         }}
-                        className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-blue-100 hover:text-blue-700 text-gray-600 rounded-full transition-colors"
+                        className="text-xs px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 rounded-full transition-all border border-blue-100 hover:border-blue-200 hover:shadow-sm"
                       >
                         {question}
                       </button>

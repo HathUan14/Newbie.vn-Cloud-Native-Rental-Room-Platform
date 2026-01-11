@@ -61,6 +61,12 @@ interface HostReviewContext {
     createdAt: Date;
 }
 
+// Response với suggested questions
+export interface AiChatResponse {
+    message: string;
+    suggestedQuestions: string[];
+}
+
 @Injectable()
 export class AiService {
     private genAI: GoogleGenerativeAI;
@@ -90,19 +96,25 @@ export class AiService {
             model: 'gemini-2.5-flash',
             generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 2048,
+                maxOutputTokens: 4096, // Tăng từ 2048 lên 4096 để tránh bị cắt response
+                topP: 0.95,
+                topK: 40,
             },
         });
     }
 
     /**
      * Hàm chat - có hỗ trợ phân tích ảnh phòng
+     * Trả về message + suggested questions
      */
-    async chatWithGemini(userMessage: string, roomId: number): Promise<string> {
+    async chatWithGemini(userMessage: string, roomId: number): Promise<AiChatResponse> {
         try {
             const roomContext = await this.getRoomData(roomId);
             if (!roomContext) {
-                return 'Xin lỗi, không tìm thấy thông tin phòng này. Vui lòng kiểm tra lại mã phòng.';
+                return {
+                    message: 'Xin lỗi, không tìm thấy thông tin phòng này. Vui lòng kiểm tra lại mã phòng.',
+                    suggestedQuestions: [],
+                };
             }
 
             const reviewsContext = await this.getRoomReviews(roomId);
@@ -146,15 +158,142 @@ export class AiService {
 
             const result = await chat.sendMessage(userMessage);
             const response = await result.response;
-            console.log('AI Response:', response.text());
-            return response.text();
+            let responseText = response.text();
+            
+            // Kiểm tra nếu response bị cắt giữa chừng (không kết thúc đúng)
+            const finishReason = response.candidates?.[0]?.finishReason;
+            if (finishReason === 'MAX_TOKENS') {
+                responseText += '\n\n*(...Câu trả lời bị giới hạn độ dài. Bạn có thể hỏi tiếp để biết thêm chi tiết.)*';
+            }
+            
+            // Generate suggested questions dựa trên context và câu hỏi hiện tại
+            const suggestedQuestions = this.generateSuggestedQuestions(userMessage, roomContext);
+            
+            console.log('AI Response:', responseText);
+            return {
+                message: responseText,
+                suggestedQuestions,
+            };
         } catch (error) {
             console.error('AI Error:', error);
             if (error instanceof NotFoundException) {
-                return error.message;
+                return {
+                    message: error.message,
+                    suggestedQuestions: [],
+                };
             }
-            return 'Xin lỗi, hiện tại hệ thống AI đang quá tải. Bạn vui lòng thử lại sau nhé!';
+            return {
+                message: 'Xin lỗi, hiện tại hệ thống AI đang quá tải. Bạn vui lòng thử lại sau nhé!',
+                suggestedQuestions: ['Thử lại câu hỏi'],
+            };
         }
+    }
+
+    /**
+     * Generate suggested questions dựa trên context và câu hỏi trước đó
+     */
+    private generateSuggestedQuestions(lastQuestion: string, roomContext: RoomContext): string[] {
+        const allSuggestions: { question: string; category: string; priority: number }[] = [];
+        const lowerQuestion = lastQuestion.toLowerCase();
+
+        // Phân loại câu hỏi vừa hỏi để gợi ý câu hỏi khác category
+        const askedAboutPrice = /giá|tiền|chi phí|cọc|thuê|tháng/.test(lowerQuestion);
+        const askedAboutLocation = /địa chỉ|vị trí|gần|khu vực|đường|quận/.test(lowerQuestion);
+        const askedAboutAmenities = /tiện ích|wifi|điện|nước|máy lạnh|nội thất/.test(lowerQuestion);
+        const askedAboutRules = /quy định|giờ giấc|thú cưng|nấu ăn|giới nghiêm/.test(lowerQuestion);
+        const askedAboutHost = /chủ nhà|liên hệ|đánh giá|review/.test(lowerQuestion);
+        const askedAboutRoom = /phòng|diện tích|rộng|người|ở được/.test(lowerQuestion);
+        const askedAboutSafety = /an toàn|an ninh|bảo vệ|camera/.test(lowerQuestion);
+
+        // === CHI PHÍ ===
+        if (!askedAboutPrice) {
+            allSuggestions.push(
+                { question: 'Tổng chi phí hàng tháng là bao nhiêu?', category: 'price', priority: 1 },
+                { question: 'Tiền cọc và điều kiện hoàn cọc?', category: 'price', priority: 2 },
+            );
+        } else {
+            // Nếu đã hỏi về giá, gợi ý chi tiết hơn
+            allSuggestions.push(
+                { question: 'Có phí phát sinh nào khác không?', category: 'price', priority: 3 },
+            );
+        }
+
+        // === VỊ TRÍ ===
+        if (!askedAboutLocation) {
+            allSuggestions.push(
+                { question: 'Khu vực xung quanh có gì?', category: 'location', priority: 1 },
+                { question: 'Có hay bị ngập nước không?', category: 'location', priority: 2 },
+            );
+        }
+
+        // === TIỆN ÍCH ===
+        if (!askedAboutAmenities) {
+            allSuggestions.push(
+                { question: 'Phòng có những tiện ích gì?', category: 'amenities', priority: 1 },
+            );
+            if (roomContext.amenities.length > 0) {
+                allSuggestions.push(
+                    { question: 'Wifi có ổn định không?', category: 'amenities', priority: 3 },
+                );
+            }
+        }
+
+        // === QUY ĐỊNH ===
+        if (!askedAboutRules) {
+            if (roomContext.curfew) {
+                allSuggestions.push(
+                    { question: 'Giờ giới nghiêm cụ thể là mấy giờ?', category: 'rules', priority: 2 },
+                );
+            }
+            if (!roomContext.petAllowed) {
+                allSuggestions.push(
+                    { question: 'Có được nuôi thú cưng không?', category: 'rules', priority: 3 },
+                );
+            }
+            allSuggestions.push(
+                { question: 'Quy định của phòng như thế nào?', category: 'rules', priority: 2 },
+            );
+        }
+
+        // === CHỦ NHÀ ===
+        if (!askedAboutHost) {
+            if (roomContext.hostReviewCount > 0) {
+                allSuggestions.push(
+                    { question: 'Đánh giá về chủ nhà như thế nào?', category: 'host', priority: 1 },
+                );
+            }
+            allSuggestions.push(
+                { question: 'Chủ nhà có uy tín không?', category: 'host', priority: 2 },
+            );
+        }
+
+        // === PHÒNG ===
+        if (!askedAboutRoom) {
+            allSuggestions.push(
+                { question: 'Phòng trông như thế nào?', category: 'room', priority: 1 },
+                { question: 'Có nên thuê phòng này không?', category: 'room', priority: 1 },
+            );
+        }
+
+        // === AN TOÀN ===
+        if (!askedAboutSafety) {
+            allSuggestions.push(
+                { question: 'Khu vực có an toàn không?', category: 'safety', priority: 2 },
+            );
+        }
+
+        // === QUY TRÌNH ===
+        allSuggestions.push(
+            { question: 'Quy trình đặt phòng như thế nào?', category: 'process', priority: 3 },
+        );
+
+        // Sắp xếp theo priority và loại bỏ category đã hỏi, lấy tối đa 4 câu
+        const sortedSuggestions = allSuggestions
+            .sort((a, b) => a.priority - b.priority)
+            .slice(0, 4)
+            .map(s => s.question);
+
+        return sortedSuggestions;
     }
 
     /**
@@ -417,10 +556,11 @@ export class AiService {
            - Gần trường học/bệnh viện/siêu thị nào
 
         === YÊU CẦU TRẢ LỜI ===
-        - Trả lời ngắn gọn, thân thiện.
+        - Trả lời ngắn gọn, súc tích, thân thiện (tối đa 500 từ).
         - Định dạng Markdown (xuống dòng, in đậm các ý chính).
         - Nếu không có thông tin trong Context, hãy nói "Hiện tại dữ liệu chưa cập nhật thông tin này".
         - Khi tính toán chi phí, hiển thị rõ từng khoản và tổng cộng.
+        - QUAN TRỌNG: Đừng liệt kê quá dài, hãy tập trung vào câu hỏi của người dùng.
       `;
     }
 
@@ -573,6 +713,42 @@ export class AiService {
             webp: 'image/webp',
         };
         return mimeTypes[extension || ''] || 'image/jpeg';
+    }
+
+    // ==================== INITIAL SUGGESTIONS ====================
+
+    /**
+     * Lấy suggested questions ban đầu khi user mới mở chat
+     */
+    async getInitialSuggestions(roomId: number): Promise<string[]> {
+        const roomContext = await this.getRoomData(roomId);
+        if (!roomContext) {
+            return [
+                'Phòng này giá bao nhiêu?',
+                'Có những tiện ích gì?',
+                'Khu vực có an toàn không?',
+            ];
+        }
+
+        const suggestions: string[] = [
+            'Tổng chi phí hàng tháng là bao nhiêu?',
+            'Phòng trông như thế nào?',
+        ];
+
+        // Gợi ý dựa trên đặc điểm phòng
+        if (roomContext.hostReviewCount > 0) {
+            suggestions.push('Đánh giá về chủ nhà thế nào?');
+        }
+
+        if (roomContext.curfew) {
+            suggestions.push('Giờ giới nghiêm là mấy giờ?');
+        } else {
+            suggestions.push('Có quy định gì đặc biệt không?');
+        }
+
+        suggestions.push('Có nên thuê phòng này không?');
+
+        return suggestions.slice(0, 4);
     }
 
     // ==================== COST ESTIMATION ====================

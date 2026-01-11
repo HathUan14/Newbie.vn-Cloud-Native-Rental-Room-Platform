@@ -1,153 +1,131 @@
 import { DataSource } from 'typeorm';
-import * as dotenv from 'dotenv';
+import { User } from '../../user/user.entity';
+import { Room } from '../../room/entities/room.entity';
+import { Booking, BookingStatus } from '../../booking/entities/booking.entity';
+import { Review } from '../../review/entities/review.entity';
+import { UserReview } from '../../user-review/user-review.entity';
 
-// Load environment variables
-dotenv.config();
+export const seedReviewData = async (dataSource: DataSource) => {
+  const userRepository = dataSource.getRepository(User);
+  const roomRepository = dataSource.getRepository(Room);
+  const bookingRepository = dataSource.getRepository(Booking);
+  const reviewRepository = dataSource.getRepository(Review);
+  const userReviewRepository = dataSource.getRepository(UserReview);
 
-// Mảng comment mẫu cho mỗi mức rating
-const comments = {
-  1: [
-    'Phòng rất tệ, không giống hình ảnh',
-    'Chủ nhà không thân thiện, phòng bẩn',
-    'Không đáng tiền, cơ sở vật chất quá tệ',
-    'Rất thất vọng, không khuyến khích thuê',
-    'Phòng có mùi ẩm mốc, không sạch sẽ',
-  ],
-  2: [
-    'Phòng cần cải thiện nhiều',
-    'Giá hơi cao so với chất lượng',
-    'Vị trí không thuận tiện lắm',
-    'Phòng nhỏ hơn mô tả',
-    'Cần nâng cấp thêm tiện nghi',
-  ],
-  3: [
-    'Phòng tạm ổn, giá cả hợp lý',
-    'Vị trí khá tốt nhưng phòng hơi nhỏ',
-    'Chủ nhà thân thiện, phòng sạch sẽ',
-    'Đủ dùng cho sinh viên',
-    'Không có gì đặc biệt nhưng cũng không tệ',
-  ],
-  4: [
-    'Phòng rất đẹp, sạch sẽ và thoáng mát',
-    'Chủ nhà tốt bụng, phòng đầy đủ tiện nghi',
-    'Vị trí thuận lợi, gần chợ và trường học',
-    'Giá hợp lý, phòng rộng rãi',
-    'Rất hài lòng với chất lượng phòng',
-  ],
-  5: [
-    'Phòng tuyệt vời! Rất đáng tiền!',
-    'Chủ nhà nhiệt tình, phòng như mô tả',
-    'Không thể tốt hơn! Sẽ giới thiệu bạn bè',
-    'Phòng đẹp lung linh, tiện nghi hiện đại',
-    'Hoàn hảo! Vị trí đẹp, phòng sạch, giá tốt',
-    'Rất hài lòng, sẽ ở dài hạn!',
-  ],
-};
+  // 1. Lấy dữ liệu từ DB (Đảm bảo bạn đã import CSV trước đó)
+  const hosts = await userRepository.find({ where: { isHost: true } });
+  const renters = await userRepository.find({ where: { isHost: false, isAdmin: false } });
+  const rooms = await roomRepository.find({ relations: ['host'] });
 
-async function seedReviews() {
-  const DATABASE_URL = process.env.DATABASE_URL;
-  
-  if (!DATABASE_URL) {
-    console.error('❌ Lỗi: DATABASE_URL không được tìm thấy trong .env');
-    process.exit(1);
+  if (rooms.length === 0 || renters.length === 0) {
+    console.error('Lỗi: Không tìm thấy dữ liệu Room hoặc Renter. Hãy seed User và Room trước!');
+    return;
   }
 
-  const dataSource = new DataSource({
-    type: 'postgres',
-    url: DATABASE_URL,
-    synchronize: false,
-  });
+  console.log(`--- Đang bắt đầu seed 3 nhóm Review cho ${rooms.length} phòng ---`);
 
-  try {
-    console.log('🔌 Đang kết nối database...');
-    await dataSource.initialize();
-    console.log('✅ Đã kết nối database\n');
+  for (let i = 0; i < rooms.length; i++) {
+    const room = rooms[i];
+    // Xoay vòng người thuê (vì chỉ có 7 người thuê cho 32 phòng)
+    const renter = renters[i % renters.length];
+    
+    let rating: number;
+    let roomComment: string;
+    let hostComment: string;
 
-    // Lấy danh sách bookings có sẵn
-    const bookings = await dataSource.query(`
-      SELECT b.id as booking_id, b.renter_id, b.room_id
-      FROM bookings b
-      WHERE b.status IN ('CONFIRMED', 'APPROVED')
-      ORDER BY b.id
-    `);
+    // CHIA 3 NHÓM DỮ LIỆU DỰA TRÊN CHỈ SỐ I
+    if (i % 3 === 0) { 
+      // NHÓM 1: TÍCH CỰC (4-5 SAO) - Chiếm ~33%
+      rating = Math.random() > 0.4 ? 5 : 4;
+      const positiveReviews = [
+        `Phòng ở ${room.district} này rất tuyệt, sạch sẽ và thoáng mát. Anh ${room.host.fullName} hỗ trợ nhiệt tình.`,
+        "Không gian yên tĩnh, an ninh cực tốt, rất phù hợp để học tập và làm việc lâu dài.",
+        "Nội thất mới, y hệt như trong ảnh. Cảm ơn chủ nhà vì trải nghiệm tuyệt vời!",
+        "Vị trí thuận tiện, gần các tiện ích. Phòng sạch và không gian sống rất thoải mái."
+      ];
+      roomComment = positiveReviews[Math.floor(Math.random() * positiveReviews.length)];
+      hostComment = "Chủ nhà cực kỳ uy tín, thân thiện và giải quyết yêu cầu rất nhanh.";
 
-    if (bookings.length === 0) {
-      console.error('❌ Không có booking nào để tạo review!');
-      console.log('💡 Hãy đảm bảo có dữ liệu bookings trong database');
-      process.exit(1);
+    } else if (i % 3 === 1) {
+      // NHÓM 2: TRUNG BÌNH (3 SAO) - Chiếm ~33%
+      rating = 3;
+      const neutralReviews = [
+        "Phòng đẹp nhưng hẻm vào hơi sâu và tối, đi lại buổi đêm hơi bất tiện.",
+        "Tiện nghi ổn nhưng tiền điện tính giá kinh doanh hơi cao. Cần cân nhắc chi phí này.",
+        "Chất lượng phòng tốt nhưng cách âm không được tốt lắm, thỉnh thoảng nghe tiếng ồn từ nhà bên cạnh.",
+        "Mọi thứ ở mức ổn, phù hợp với giá tiền nhưng cần cải thiện khâu vệ sinh hành lang."
+      ];
+      roomComment = neutralReviews[Math.floor(Math.random() * neutralReviews.length)];
+      hostComment = "Chủ nhà bình thường, đôi khi liên hệ qua Zalo phản hồi hơi chậm.";
+
+    } else {
+      // NHÓM 3: TIÊU CỰC (1-2 SAO) - Chiếm ~33%
+      rating = Math.random() > 0.5 ? 2 : 1;
+      const negativeReviews = [
+        "Thất vọng! Phòng bị thấm dột khi mưa lớn mà báo chủ nhà mãi không thấy qua xử lý.",
+        "Mọi người nên cẩn thận, lúc dọn đi chủ nhà tìm đủ mọi cách để trừ tiền cọc vô lý.",
+        "Phòng cực kỳ ồn ào vì gần quán nhậu, không thể tập trung làm việc được. Rất tệ!",
+        "Không đúng như mô tả, phòng nhỏ và bí bách hơn trong hình nhiều."
+      ];
+      roomComment = negativeReviews[Math.floor(Math.random() * negativeReviews.length)];
+      hostComment = "Rất không hài lòng với thái độ của chủ nhà khi giải quyết khiếu nại của người thuê.";
     }
 
-    console.log(`📊 Tìm thấy ${bookings.length} bookings`);
-    console.log('🔄 Bắt đầu tạo 100 reviews ngẫu nhiên...\n');
+    // A. TẠO BOOKING (Trạng thái COMPLETED để hợp lệ cho Review)
+    const booking = await bookingRepository.save(
+      bookingRepository.create({
+        renterId: renter.id,
+        roomId: room.id,
+        moveInDate: new Date(),
+        depositAmount: room.deposit,
+        totalPrice: room.pricePerMonth,
+        status: BookingStatus.CONFIRMED,
+      })
+    );
 
-    let createdCount = 0;
-    const totalReviews = 100;
+    // B. TẠO REVIEW PHÒNG
+    await reviewRepository.save(
+      reviewRepository.create({
+        bookingId: booking.id,
+        renterId: renter.id,
+        roomId: room.id,
+        rating: rating,
+        comment: roomComment,
+      })
+    );
 
-    for (let i = 0; i < totalReviews; i++) {
-      // Chọn ngẫu nhiên một booking
-      const booking = bookings[Math.floor(Math.random() * bookings.length)];
-      
-      // Random rating từ 1 đến 5
-      const rating = Math.floor(Math.random() * 5) + 1;
-      
-      // Random comment từ mảng tương ứng với rating
-      const commentList = comments[rating as keyof typeof comments];
-      const comment = commentList[Math.floor(Math.random() * commentList.length)];
-
-      // Random ngày tạo trong 6 tháng gần đây
-      const daysAgo = Math.floor(Math.random() * 180);
-      const createdAt = new Date();
-      createdAt.setDate(createdAt.getDate() - daysAgo);
-
-      try {
-        await dataSource.query(`
-          INSERT INTO reviews (booking_id, renter_id, room_id, rating, comment, created_at)
-          VALUES ($1, $2, $3, $4, $5, $6)
-        `, [
-          booking.booking_id,
-          booking.renter_id,
-          booking.room_id,
-          rating,
-          comment,
-          createdAt
-        ]);
-
-        createdCount++;
-        
-        if ((i + 1) % 10 === 0) {
-          console.log(`✅ Đã tạo ${i + 1}/${totalReviews} reviews...`);
-        }
-      } catch (error: any) {
-        // Bỏ qua lỗi nếu review đã tồn tại
-        if (!error.message.includes('duplicate')) {
-          console.error(`⚠️  Lỗi khi tạo review ${i + 1}:`, error.message);
-        }
+    // C. TẠO REVIEW CHỦ NHÀ (Đảm bảo tính Unique reviewer-host)
+    const existingUserReview = await userReviewRepository.findOne({
+      where: { 
+        reviewer: { id: renter.id }, 
+        host: { id: room.host.id } 
       }
-    }
-
-    console.log(`\n🎉 Hoàn thành! Đã tạo ${createdCount} reviews`);
-
-    // Thống kê rating
-    const stats = await dataSource.query(`
-      SELECT rating, COUNT(*) as count
-      FROM reviews
-      GROUP BY rating
-      ORDER BY rating
-    `);
-
-    console.log('\n📊 Thống kê rating:');
-    stats.forEach((stat: any) => {
-      const stars = '⭐'.repeat(stat.rating);
-      console.log(`${stars} (${stat.rating} sao): ${stat.count} reviews`);
     });
 
-    await dataSource.destroy();
-    console.log('\n✅ Đóng kết nối database');
-    
-  } catch (error) {
-    console.error('❌ Lỗi:', error);
-    process.exit(1);
+    if (!existingUserReview) {
+      await userReviewRepository.save(
+        userReviewRepository.create({
+          reviewer: renter,
+          host: room.host,
+          rating: rating,
+          comment: hostComment,
+        })
+      );
+    }
   }
-}
 
-seedReviews();
+  // 2. CẬP NHẬT AVG RATING CHO HOST (Để demo giao diện hiển thị sao)
+  console.log("Đang cập nhật chỉ số Rating cho các Host...");
+  for (const host of hosts) {
+    const reviews = await userReviewRepository.find({ where: { host: { id: host.id } } });
+    const count = reviews.length;
+    const avg = count > 0 ? reviews.reduce((sum, r) => sum + Number(r.rating), 0) / count : 0;
+
+    await userRepository.update(host.id, {
+      avgRating: parseFloat(avg.toFixed(1)),
+      reviewCount: count,
+    });
+  }
+
+  console.log('--- SEED DỮ LIỆU REVIEW THÀNH CÔNG! ---');
+};

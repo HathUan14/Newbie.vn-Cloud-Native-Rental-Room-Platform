@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReviewSection from './components/review/review-section';
 import { AiChatWidget } from '@/components/AiChat';
 
+
 // --- CONSTANTS & UTILS ---
 const ROOM_TYPE_LABELS: Record<string, string> = {
   ROOM: 'Phòng trọ',
@@ -188,7 +189,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
   const [myRating, setMyRating] = useState(3);
   const [myComment, setMyComment] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  
+
   // Room review states
   type RoomReview = {
     id: number;
@@ -206,11 +207,24 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
   const [myRoomRating, setMyRoomRating] = useState(3);
   const [myRoomComment, setMyRoomComment] = useState("");
   const [isSubmittingRoomReview, setIsSubmittingRoomReview] = useState(false);
-  
+
   // Kiểm tra user có booking CONFIRMED với host này không
   const [hasConfirmedBooking, setHasConfirmedBooking] = useState(false);
   // Lưu bookingId để submit room review
   const [confirmedBookingId, setConfirmedBookingId] = useState<number | null>(null);
+
+  // Tin đăng tương tự & Tin rao khác của chủ nhà
+  type SimilarRoom = {
+    id: number;
+    title: string;
+    price: number;  // Backend trả về 'price'
+    size: number;   // Backend trả về 'size'
+    location: string; // Backend trả về 'location' (string)
+    roomType: string;
+    images: { url: string }[]; // Backend trả về 'url' không phải 'imageUrl'
+  };
+  const [similarRooms, setSimilarRooms] = useState<SimilarRoom[]>([]);
+  const [hostOtherRooms, setHostOtherRooms] = useState<SimilarRoom[]>([]);
 
   // lấy thông tin wishlist khi reload page 
   useEffect(() => {
@@ -219,6 +233,75 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
       setIsSaved(saved);
     }
   }, [data, currentUser]);
+
+  // Fetch phòng tương tự (cùng quận, cùng loại phòng)
+  useEffect(() => {
+    async function fetchSimilarRooms() {
+      try {
+        console.log('Current room data:', { district: data.district, roomType: data.roomType, id: data.id });
+        const params = new URLSearchParams({
+          district: data.district,
+          roomType: data.roomType,
+          limit: '6',
+        });
+        console.log('Fetching similar rooms with params:', params.toString());
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/rooms?${params.toString()}`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        console.log('API Response:', json);
+        if (json.success && json.data) {
+          // Backend trả về pagination: json.data.data chứa mảng phòng
+          const rooms = Array.isArray(json.data) ? json.data : (json.data.data || []);
+          console.log('Rooms before filter:', rooms);
+          console.log('Rooms length:', rooms.length);
+          // Lọc bỏ phòng hiện tại
+          const filtered = rooms.filter((room: SimilarRoom) => room.id !== data.id);
+          console.log('Filtered rooms:', filtered);
+          setSimilarRooms(filtered.slice(0, 4));
+        } else {
+          console.log('No data in response or success=false');
+        }
+      } catch (err) {
+        console.error('Fetch similar rooms failed:', err);
+      }
+    }
+    fetchSimilarRooms();
+  }, [data.id, data.district, data.roomType]);
+
+  // Fetch phòng khác của chủ nhà
+  useEffect(() => {
+    async function fetchHostOtherRooms() {
+      try {
+        console.log('Fetching rooms for hostId:', data.host.id);
+        const params = new URLSearchParams({
+          hostId: data.host.id.toString(),
+          limit: '6',
+        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/rooms?${params.toString()}`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        console.log('Host rooms API Response:', json);
+        if (json.success && json.data) {
+          // Backend trả về pagination: json.data.data chứa mảng phòng
+          const rooms = Array.isArray(json.data) ? json.data : (json.data.data || []);
+          console.log('Host rooms before filter:', rooms);
+          // Lọc bỏ phòng hiện tại
+          const filtered = rooms.filter((room: SimilarRoom) => room.id !== data.id);
+          console.log('Host filtered rooms:', filtered);
+          setHostOtherRooms(filtered.slice(0, 4));
+        } else {
+          console.log('No host rooms data');
+        }
+      } catch (err) {
+        console.error('Fetch host other rooms failed:', err);
+      }
+    }
+    fetchHostOtherRooms();
+  }, [data.id, data.host.id]);
 
   // Kiểm tra user có booking CONFIRMED với host/room này không
   useEffect(() => {
@@ -231,26 +314,26 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/booking/my-bookings`,
-          { 
+          {
             credentials: 'include',
-            cache: 'no-store' 
+            cache: 'no-store'
           }
         );
         const json = await res.json();
         if (json.success && json.data) {
           // Tìm booking CONFIRMED với phòng này
-          const confirmedBooking = json.data.find((booking: any) => 
-            booking.status === 'CONFIRMED' && 
+          const confirmedBooking = json.data.find((booking: any) =>
+            booking.status === 'CONFIRMED' &&
             booking.roomId === data.id
           );
-          
+
           if (confirmedBooking) {
             setHasConfirmedBooking(true);
             setConfirmedBookingId(confirmedBooking.id);
           } else {
             // Fallback: kiểm tra booking CONFIRMED với host
-            const hasConfirmedWithHost = json.data.some((booking: any) => 
-              booking.status === 'CONFIRMED' && 
+            const hasConfirmedWithHost = json.data.some((booking: any) =>
+              booking.status === 'CONFIRMED' &&
               booking.room?.host?.id === data.host.id
             );
             setHasConfirmedBooking(hasConfirmedWithHost);
@@ -366,7 +449,7 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
         }
       );
       const postData = await postRes.json();
-      
+
       if (postData.id || postRes.ok) {
         toast.success('Đánh giá chủ nhà thành công!');
         // Cập nhật ở front-end
@@ -801,6 +884,57 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                 </div>
               </div>
 
+              {/* Tin rao khác của chủ nhà */}
+              {hostOtherRooms.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      Tin rao khác của {data.host.fullName}
+                    </h3>
+                    <Link
+                      href={`/search?hostId=${data.host.id}`}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                    >
+                      Xem tất cả →
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {hostOtherRooms.map((room) => (
+                      <RoomCard key={room.id} room={room} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tin đăng tương tự */}
+              {similarRooms.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Tin đăng tương tự tại {data.district}
+                    </h3>
+                    <Link
+                      href={`/search?district=${encodeURIComponent(data.district)}&roomType=${data.roomType}`}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                    >
+                      Xem tất cả →
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {similarRooms.map((room) => (
+                      <RoomCard key={room.id} room={room} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
 
             </div>
 
@@ -860,9 +994,13 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
                         <span className="text-slate-500">{data.host.reviewCount} đánh giá</span>
                       </div>
                     )}
-                    <button className="text-xs text-blue-600 font-medium hover:underline">
+
+                    <Link
+                      href={`/host-profile/${data.host.id}`}
+                      className="text-xs text-blue-600 font-medium hover:underline"
+                    >
                       Xem hồ sơ
-                    </button>
+                    </Link>
                   </div>
                 </div>
 
@@ -948,10 +1086,10 @@ function RoomDetailContent({ data, currentUser, selectedImage, setSelectedImage,
       )}
 
       {/* AI Chat Widget - Auto open with room context */}
-      <AiChatWidget 
-        roomId={data.id} 
-        roomTitle={data.title} 
-        defaultOpen={true} 
+      <AiChatWidget
+        roomId={data.id}
+        roomTitle={data.title}
+        defaultOpen={true}
       />
 
       {/* IMAGE LIGHTBOX MODAL */}
@@ -1212,6 +1350,53 @@ function BookingModal({ room, onClose }: { room: any; onClose: () => void }) {
 }
 
 // --- HELPER COMPONENTS ---
+
+// Room Card Component cho tin đăng tương tự
+function RoomCard({ room }: { room: any }) {
+  // Backend trả về images[].url không phải images[].imageUrl
+  const imageUrl = room.images?.[0]?.url || '/placeholder.jpg';
+
+  return (
+    <Link
+      href={`/rooms/${room.id}`}
+      className="group block bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all duration-300"
+    >
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={room.title}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-500"
+        />
+        <div className="absolute top-2 left-2">
+          <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-700 rounded-lg">
+            {ROOM_TYPE_LABELS[room.roomType] || room.roomType}
+          </span>
+        </div>
+      </div>
+      <div className="p-3">
+        <h4 className="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-blue-600 transition-colors">
+          {room.title}
+        </h4>
+        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+          <MapPin className="w-3 h-3" />
+          <span className="line-clamp-1">{room.location}</span>
+        </div>
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+          <span className="text-blue-600 font-bold text-sm">
+            {formatCurrency(room.price)}
+            <span className="text-gray-400 font-normal text-xs">/tháng</span>
+          </span>
+          <span className="text-xs text-gray-500 flex items-center gap-1">
+            <Maximize2 className="w-3 h-3" />
+            {room.size} m²
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function CostItem({
   label,
   value,
@@ -1242,4 +1427,3 @@ function CostItem({
     </div>
   );
 }
-
