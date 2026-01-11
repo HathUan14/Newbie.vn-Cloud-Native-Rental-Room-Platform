@@ -15,7 +15,7 @@ export class MailService {
   constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(user: User, token: string) {
-    const url = `http://localhost:3000/verify-email?token=${token}`;
+    const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
     await this.mailerService.sendMail({
       to: user.email,
@@ -39,7 +39,7 @@ export class MailService {
     let subject = '';
     let link = '';
 
-    const frontendUrl = 'http://localhost:3001';
+    const frontendUrl = process.env.FRONTEND_URL;
 
     switch (status) {
       case ModerationStatus.APPROVED:
@@ -92,7 +92,7 @@ export class MailService {
         name: user.fullName,
         roomTitle: roomTitle,
         reason: reason,
-        actionUrl: 'http://localhost:3001/dashboard/my-bookings',
+        actionUrl: `${process.env.FRONTEND_URL}/dashboard/my-bookings`,
       },
     });
   }
@@ -115,7 +115,7 @@ export class MailService {
         roomTitle: roomTitle,
         amount: amount,
         moveInDate: moveInDate,
-        actionUrl: 'http://localhost:3001/dashboard/bookings',
+        actionUrl: `${process.env.FRONTEND_URL}/dashboard/bookings`,
       },
     });
   }
@@ -173,7 +173,7 @@ export class MailService {
         roomTitle: roomTitle,
         refundAmount: refundAmount,
         reason: reason,
-        actionUrl: 'http://localhost:3001/dashboard/bookings',
+        actionUrl: `http://${process.env.FRONTEND_URL}/dashboard/bookings`,
       },
     });
   }
@@ -205,13 +205,13 @@ export class MailService {
         renterName: renterName,
         refundAmount: refundAmount,
         reason: reason,
-        actionUrl: 'http://localhost:3001/dashboard/host-bookings',
+        actionUrl: `http://${process.env.FRONTEND_URL}/dashboard/host-bookings`,
       },
     });
   }
 
   async sendPasswordReset(user: User, token: string) {
-    const url = `http://localhost:3001/reset-password?token=${token}`;
+    const url = `http://${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
     await this.mailerService.sendMail({
       to: user.email,

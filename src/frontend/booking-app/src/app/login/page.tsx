@@ -93,16 +93,7 @@ const LoginPage: React.FC = () => {
       <div className="w-full max-w-md mb-10">
         <div className="bg-white/95 backdrop-blur-sm border border-gray-200 rounded-2xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <Image
-              src="/assets/kangyoo.png"
-              width={64}
-              height={64}
-              alt="Kangyoo Logo"
-              className="h-16 mx-auto mb-4 object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
+
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               Chào mừng trở lại
             </h1>

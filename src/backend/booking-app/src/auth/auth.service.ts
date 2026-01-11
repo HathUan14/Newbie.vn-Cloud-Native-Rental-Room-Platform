@@ -61,23 +61,18 @@ export class AuthService {
 
   async sendVerificationEmail(userId: number) {
     const user = await this.usersService.findById(userId);
-
     if (!user) {
       throw new NotFoundException('User không tồn tại');
     }
-
     if (user.isActive) {
       return { message: 'Email của bạn đã được xác thực rồi' };
     }
-
     // tạo token 24h
     const token = this.jwtService.sign(
       { userId: user.id },
       { expiresIn: '24h' },
     );
-
     await this.mailService.sendUserConfirmation(user, token);
-
     return { message: 'Email xác thực đã được gửi' };
   }
 
@@ -274,17 +269,11 @@ export class AuthService {
     await this.usersRepository.save(user);
   }
 
-  const payload = {
-    sub: user.id,
-    email: user.email,
-    role: {
-      isAdmin: user.isAdmin,
-      isHost: user.isHost,
-    },
-  };
+  const tokens = await this.generateTokens(user);
 
   return {
-    accessToken: this.jwtService.sign(payload),
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
     user,
   };
 }
