@@ -274,17 +274,11 @@ export class AuthService {
     await this.usersRepository.save(user);
   }
 
-  const payload = {
-    sub: user.id,
-    email: user.email,
-    role: {
-      isAdmin: user.isAdmin,
-      isHost: user.isHost,
-    },
-  };
+  const tokens = await this.generateTokens(user);
 
   return {
-    accessToken: this.jwtService.sign(payload),
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
     user,
   };
 }

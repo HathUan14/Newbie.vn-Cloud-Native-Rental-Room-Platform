@@ -21,6 +21,15 @@ import { AuthGuard } from '@nestjs/passport';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  private getCookieSettings() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    return {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+    };
+  }
+
   @Post('register')
   async register(
     @Body() registerDto: RegisterUserDto,
@@ -28,17 +37,15 @@ export class AuthController {
   ) {
     const result = await this.authService.register(registerDto);
 
+    const cookieSettings = this.getCookieSettings();
+
     res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      ...cookieSettings,
       maxAge: 60 * 60 * 1000,
     });
 
     res.cookie('refresh_token', result.refresh_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      ...cookieSettings,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -57,17 +64,15 @@ export class AuthController {
   ) {
     const result = await this.authService.login(loginDto);
 
+    const cookieSettings = this.getCookieSettings();
+
     res.cookie('access_token', result.access_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      ...cookieSettings,
       maxAge: 60 * 60 * 1000,
     });
 
     res.cookie('refresh_token', result.refresh_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      ...cookieSettings,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -88,17 +93,15 @@ export class AuthController {
 
     const token = await this.authService.refresh(userId);
 
+    const cookieSettings = this.getCookieSettings();
+
     res.cookie('access_token', token.access_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      ...cookieSettings,
       maxAge: 60 * 60 * 1000,
     });
 
     res.cookie('refresh_token', token.refresh_token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      ...cookieSettings,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -177,13 +180,20 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res) {
-    const {accessToken} = await this.authService.googleLogin(req.user);
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 7* 24* 60 * 60 * 1000, //Thọ 1 tuần
+    const { access_token, refresh_token } = await this.authService.googleLogin(req.user);
+    
+    const cookieSettings = this.getCookieSettings();
+
+    res.cookie('access_token', access_token, {
+      ...cookieSettings,
+      maxAge: 60 * 60 * 1000, // 1 hour
     });
+
+    res.cookie('refresh_token', refresh_token, {
+      ...cookieSettings,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     return res.redirect(`${process.env.FRONTEND_URL}`);
   }
 
