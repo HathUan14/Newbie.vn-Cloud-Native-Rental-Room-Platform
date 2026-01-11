@@ -132,8 +132,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async logout(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    res.clearCookie('refresh_token');
-    res.clearCookie('access_token');
+    const cookieSettings = this.getCookieSettings();
+    
+    // Clear cookies with the same options used to set them
+    res.clearCookie('access_token', cookieSettings);
+    res.clearCookie('refresh_token', cookieSettings);
+    
     return {
       success: true,
       message: 'Logout successfully',
