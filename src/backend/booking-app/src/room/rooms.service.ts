@@ -335,6 +335,9 @@ export class RoomsService {
 
     const savedRoom = await this.roomsRepository.save(room);
 
+    if (user && !user.isHost) {
+      await this.usersRepository.update(user.id, { isHost: true });
+    }
     if (requireVerification && user) {
       this.authService.sendVerificationEmail(user.id).catch(err => {
         console.error("Lỗi gửi mail:", err);
@@ -363,10 +366,10 @@ export class RoomsService {
     const room = await this.roomsRepository.findOne({
       where: { id: roomId },
       relations: [
-        'images', 
-        'roomAmenities', 
+        'images',
+        'roomAmenities',
         'roomAmenities.amenity'
-      ], 
+      ],
     });
 
     if (!room) {
@@ -484,7 +487,7 @@ export class RoomsService {
       const existingImage = await this.roomImagesRepo.findOne({
         where: { id: dto.coverImageId, roomId: room.id }
       });
-      
+
       if (existingImage) {
         await this.roomImagesRepo.update(
           { id: dto.coverImageId },
@@ -560,7 +563,7 @@ export class RoomsService {
       message: 'Xóa tin đăng thành công'
     };
   }
-  
+
   // 2 hàm cho tính năng watchlist
 
   async toggleSaveRoom(roomId: number, userId: number) {

@@ -46,14 +46,10 @@ export default function HostDashboardLayout({ children }: { children: React.Reac
   const { user, isLoading, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Kiểm tra quyền Host
+  // Kiểm tra quyền - chỉ redirect về login nếu chưa đăng nhập
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        router.push('/login');
-      } else if (!user.isHost) {
-        router.push('/');
-      }
+    if (!isLoading && !user) {
+      router.push('/login');
     }
   }, [user, isLoading, router]);
 
@@ -73,6 +69,71 @@ export default function HostDashboardLayout({ children }: { children: React.Reac
         <div className="flex items-center gap-3 text-gray-500">
           <div className="w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
           <span>Đang tải...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Nếu user chưa là host, hiển thị gợi ý đăng tin
+  if (user && !user.isHost) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
+          {/* Icon */}
+          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Home className="w-10 h-10 text-blue-600" />
+          </div>
+          
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
+            Bạn chưa phải là Chủ nhà
+          </h1>
+          
+          {/* Description */}
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            Để truy cập trang quản lý cho thuê, bạn cần đăng ít nhất một tin cho thuê phòng. 
+            Hãy bắt đầu kiếm thu nhập từ căn phòng của bạn ngay hôm nay!
+          </p>
+          
+          {/* Benefits */}
+          <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm font-medium text-gray-900 mb-3">Lợi ích khi trở thành Chủ nhà:</p>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>Tiếp cận hàng nghìn người thuê tiềm năng</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>Quản lý đặt phòng dễ dàng</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>Thống kê chi tiết về doanh thu</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span>Hỗ trợ thanh toán an toàn</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* CTA Button */}
+          <Link
+            href="/room/post"
+            className="inline-flex items-center justify-center gap-2 w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-600/25"
+          >
+            <Plus className="w-5 h-5" />
+            Đăng tin cho thuê ngay
+          </Link>
+          
+          {/* Secondary link */}
+          <Link
+            href="/"
+            className="inline-block mt-4 text-sm text-gray-500 hover:text-gray-700 transition"
+          >
+            Quay về trang chủ
+          </Link>
         </div>
       </div>
     );
