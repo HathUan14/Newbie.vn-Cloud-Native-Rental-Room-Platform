@@ -34,8 +34,8 @@ import { AiModule } from './ai/ai.module';
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, 
+        port: 587,
+        secure: false, 
         auth: {
           user: 'nakrothnguyen127@gmail.com', 
           pass: 'ldcv jqxm iewu qddu',    
