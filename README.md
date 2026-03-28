@@ -1,6 +1,11 @@
-## Booking App - A website that help searching for good accomodation
+## Newbie.vn - A website that help searching for good accomodation
 
 *Intoduction to Software Engineering - Group 5 - Newbie*
+
+Demo link: https://introduction-se.netlify.app/
+This project is part of a course in the Information Technology Faculty, VNU-HCMUS. 
+The project was built by 5 people: Thuan (me), Khoa, Phuoc, Phong, and Loc (team leader), utilizing AI tools, initially developed over 2 months. 
+Detailed information is described in "Software Architecture Document.pdf".
 
 ### 1. Project Structure
 ```
